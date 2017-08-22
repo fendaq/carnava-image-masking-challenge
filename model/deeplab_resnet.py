@@ -12,6 +12,7 @@ def outS(i):
     i = int(np.ceil((i+1)/2.0))
     i = (i+1)/2
     return i
+
 def conv3x3(in_planes, out_planes, stride=1):
     "3x3 convolution with padding"
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
@@ -208,4 +209,3 @@ class MS_Deeplab(nn.Module):
 def Res_Deeplab(NoLabels=21):
     model = MS_Deeplab(Bottleneck,NoLabels)
     return model
-
