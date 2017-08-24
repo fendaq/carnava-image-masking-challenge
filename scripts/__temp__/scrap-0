@@ -1,0 +1,35 @@
+## ----------------------------------------------------------------------------------
+#  ffmpeg -y -loglevel 0 -f image2 -r 15 -i 'results/%*.jpg' -b:v 8000k results.avi
+#
+
+
+    num_test = len(probs)
+    with open(csv_file,'w') as f:
+        f.write('img,rle_mask\n')
+
+        start = timer()
+        for b in range(num_test):
+            if (b%1000==0):
+                end  = timer()
+                time = (end - start) / 60
+                time_remain = (num_test-b-1)*time/(b+1)
+                print('b/num_test = %06d/%06d,  time elased (remain) = %0.1f (%0.1f) min'%(b,num_test,time,time_remain))
+
+
+
+            shortname   = test_dataset.names[b].split('/')[-1].replace('.jpg','')
+
+            prob = probs[b]
+            prob = cv2.resize(prob,(CARVANA_WIDTH,CARVANA_HEIGHT))
+            mask = prob>0.5
+
+            #im_show('prob', prob*255, resize=0.333)
+            #cv2.waitKey(0)
+
+
+            f.write('%s.jpg,%s\n'%(shortname,rle))
+
+    print( 'convert to zip')
+    zf = zipfile.ZipFile(zip_file, mode='w')
+    zf.write(csv_file, os.path.basename(csv_file), compress_type=zipfile.ZIP_DEFLATED)
+

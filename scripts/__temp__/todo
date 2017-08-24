@@ -1,0 +1,16 @@
+#https://github.com/meetshah1995/pytorch-semseg
+
+1. process bar for csv generation
+
+Next experiment plans:
+
+baseline system:  using as 256x256 input and predict 256x256.
+
+comparsion system:
+
+     1. Given 256x256 images, crop 128x128 for training and predict 128x128.  During testing, 256x256 is divided into overlapping 128x128  patches to do inference. The results are then combined.
+
+     2. Given 128x128 as input. Train to predict 256x256
+
+     3. Given 128x128 as input. Train to predict 512x512. During testing, 512x512 prediction is downsized to 256x256.
+
