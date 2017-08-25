@@ -1,0 +1,82 @@
+
+--- [START 2017-08-24 22:56:53] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train_seg_net.py
+	out_dir = ./result
+
+** dataset setting **
+
+--- [START 2017-08-24 22:59:57] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train_seg_net.py
+	out_dir = ./result
+
+** dataset setting **
+
+--- [START 2017-08-24 23:02:21] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train_seg_net.py
+	out_dir = ./result
+
+** dataset setting **
+
+--- [START 2017-08-24 23:02:41] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train_seg_net.py
+	out_dir = ./result
+
+** dataset setting **
+
+--- [START 2017-08-24 23:04:00] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train_seg_net.py
+	out_dir = ./result
+
+** dataset setting **
+	batch_size          = 8
+	train_dataset.split = train_v0_4320
+	valid_dataset.split = valid_v0_768
+	test_dataset.split  = test_3197
+	len(train_dataset)  = 4320
+	len(valid_dataset)  = 768
+	len(test_dataset)   = 3197
+** net setting **
+<class 'net.segmentation.my_unet.UNet_double_1024_5'>
+
+** start training here! **
+
+epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ... 
+--------------------------------------------------------------------------------------------------
+
+--- [START 2017-08-24 23:08:02] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train_seg_net.py
+	out_dir = ./result
+
+** dataset setting **
+	batch_size          = 8
+	train_dataset.split = train_v0_4320
+	valid_dataset.split = valid_v0_768
+	test_dataset.split  = test_3197
+	len(train_dataset)  = 4320
+	len(valid_dataset)  = 768
+	len(test_dataset)   = 3197
+** net setting **
+<class 'net.segmentation.my_unet.UNet_double_1024_5'>
+
+** start training here! **
+
+epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ... 
+--------------------------------------------------------------------------------------------------

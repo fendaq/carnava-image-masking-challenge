@@ -1,13 +1,12 @@
 from common import *
 from dataset.mask import *
 
-
-CARVANA_DIR       = '/root/share/data/kaggle-carvana-cars-2017'
+CARVANA_DIR       = '/Kaggle/kaggle-carvana-cars-2017'  #'/root/share/data/kaggle-carvana-cars-2017'
 CARVANA_NUM_VIEWS = 16
 CARVANA_HEIGHT = 1280
 CARVANA_WIDTH  = 1918
-CARVANA_H = 512
-CARVANA_W = 512
+CARVANA_H = 128
+CARVANA_W = 128
 
 
 
@@ -23,7 +22,7 @@ class KgCarDataset_1x(Dataset):
         with open(split_file) as f:
             names = f.readlines()
         names = [name.strip()for name in names]
-        num   = len(names)
+        num = len(names)
 
         #read images
         images = None
@@ -35,7 +34,7 @@ class KgCarDataset_1x(Dataset):
                 img = cv2.imread(img_file)
 
                 #img = cv2.cvtColor(img,cv2.COLOR_fBGR2HSV)
-                #img = cv2.resize(img,(width,height))
+                img = cv2.resize(img,(width,height))
                 images[n] = img/255.
 
                 #debug
@@ -52,9 +51,9 @@ class KgCarDataset_1x(Dataset):
                 # mask = PIL.Image.open(mask_file)   #opencv does not read gif
                 # mask = np.array(mask)
 
-                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
+                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)                
                 mask = cv2.imread(mask_file,cv2.IMREAD_GRAYSCALE)
-                #mask = cv2.resize(mask,(width,height))
+                mask = cv2.resize(mask,(width,height))
                 labels[n] = mask/255
 
                 #debug
@@ -110,26 +109,26 @@ class KgCarDataset_1x(Dataset):
 class KgCarDataset(Dataset):
 
     def __init__(self, split, transform=[], is_label=True, is_preload=True):
-        channel,height,width = 3, CARVANA_H, CARVANA_W
-
+        self.channel, self.height, self.width = 3, CARVANA_H, CARVANA_W
+        self.is_label = is_label
         # read names
         split_file = CARVANA_DIR +'/split/'+ split
         with open(split_file) as f:
             names = f.readlines()
         names = [name.strip()for name in names]
-        num   = len(names)
+        num = len(names)
 
         #read images
         images = None
         if is_preload==True:
-            images = np.zeros((num,height,width,channel),dtype=np.float32)
+            images = np.zeros((num,self.height,self.width,self.channel),dtype=np.float32)
             for n in range(num):
                 name = names[n]
                 img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
                 img = cv2.imread(img_file)
-
+                
                 #img = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-                #img = cv2.resize(img,(width,height))
+                img = cv2.resize(img,(self.width,self.height))
                 images[n] = img/255.
 
                 #debug
@@ -137,21 +136,22 @@ class KgCarDataset(Dataset):
 
         #read labels
         labels = None
-        if is_label==True:
-            labels = np.zeros((num,2*height,2*width),dtype=np.float32)
-            for n in range(num):
-                name = names[n]
-                name = name.replace('%dx%d'%(height,width),'%dx%d'%(2*height,2*width))
+        if self.is_label==True:
+            if is_preload==True:
+                labels = np.zeros((num, self.height, self.width),dtype=np.float32)
+                for n in range(num):
+                    name = names[n]
+                    #name = name.replace('%dx%d'%(height,width),'%dx%d'%(2*height,2*width))
 
-                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
-                mask = cv2.imread(mask_file,cv2.IMREAD_GRAYSCALE)
-                #mask = cv2.resize(mask,(width,height))
-                labels[n] = mask/255
+                    mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)                    
+                    mask = cv2.imread(mask_file, cv2.IMREAD_GRAYSCALE)                   
+                    mask = cv2.resize(mask,(self.width, self.height))
+                    labels[n] = mask/255
 
-                #debug
-                if 0:
-                    im_show('mask1', mask*255, resize=1)
-                    cv2.waitKey(0)
+                    #debug
+                    if 0:
+                        im_show('mask1', mask*255, resize=1)
+                        cv2.waitKey(0)
 
 
         #save
@@ -169,25 +169,41 @@ class KgCarDataset(Dataset):
         if self.images is None:
             name = self.names[index]
             img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
-            img   = cv2.imread(img_file)
+            img = cv2.imread(img_file)
+            
+            img = cv2.resize(img,(self.width, self.height))
+            
             image = img.astype(np.float32)/255
         else:
             image = self.images[index]
 
 
-        if self.labels is None:
+        if self.is_label == False:
             for t in self.transform:
                 image = t(image)
             image = image_to_tensor(image)
             return image, index
 
         else:
-            label = self.labels[index]
-            for t in self.transform:
-                image,label = t(image,label)
-            image = image_to_tensor(image)
-            label = label_to_tensor(label)
-            return image, label, index
+            if self.labels is None:
+                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
+                
+                mask = cv2.imread(mask_file, cv2.IMREAD_GRAYSCALE)
+                
+                mask = cv2.resize(mask,(self.width, self.height))
+                label = mask/255
+                for t in self.transform:
+                    image,label = t(image,label)
+                image = image_to_tensor(image)
+                label = label_to_tensor(label)
+                return image, label, index
+            else:
+                label = self.labels[index]
+                for t in self.transform:
+                    image,label = t(image,label)
+                image = image_to_tensor(image)
+                label = label_to_tensor(label)
+                return image, label, index
 
     def __len__(self):
         #print ('\tcalling Dataset:__len__')
