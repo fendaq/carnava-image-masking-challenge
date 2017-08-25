@@ -1,2 +1,13 @@
 # python_cache
 *.pyc
+
+# VScode
+.vscode
+
+# Result
+result/*
+result/log.train.txt
+
+# Others
+todo
+
