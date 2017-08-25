@@ -1056,11 +1056,11 @@ class UNet_double_1024_5 (nn.Module):
         out   = torch.cat([down3, out],1)
         out   = self.up3(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #128
+        out   = F.upsample_bilinear(out, scale_factor=2) #256
         out   = torch.cat([down2, out],1)
         out   = self.up2(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #256
+        out   = F.upsample_bilinear(out, scale_factor=2) #512
         out   = torch.cat([down1, out],1)
         out   = self.up1(out)
 

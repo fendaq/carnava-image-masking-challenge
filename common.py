@@ -30,7 +30,7 @@ import torch.optim as optim
 
 import torch.backends.cudnn as cudnn
 
-
+import torch.utils.model_zoo as model_zoo
 
 # std libs
 import collections

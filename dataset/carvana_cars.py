@@ -5,8 +5,8 @@ CARVANA_DIR       = '/Kaggle/kaggle-carvana-cars-2017'  #'/root/share/data/kaggl
 CARVANA_NUM_VIEWS = 16
 CARVANA_HEIGHT = 1280
 CARVANA_WIDTH  = 1918
-CARVANA_H = 128
-CARVANA_W = 128
+CARVANA_H = 512
+CARVANA_W = 512
 
 
 
