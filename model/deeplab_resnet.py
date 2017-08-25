@@ -1,24 +1,81 @@
+from common import *
+''' 
 import torch.nn as nn
 import math
 import torch.utils.model_zoo as model_zoo
-import torch
+import torch 
 import numpy as np
+'''
 affine_par = True
 
+# -----------------------------------
+# Loss copy from my_unet
+#  https://github.com/bermanmaxim/jaccardSegment/blob/master/losses.py
+#  https://discuss.pytorch.org/t/solved-what-is-the-correct-way-to-implement-custom-loss-function/3568/4
+class CrossEntropyLoss2d(nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(CrossEntropyLoss2d, self).__init__()
+        self.nll_loss = nn.NLLLoss2d(weight, size_average)
 
-def outS(i):
+    def forward(self, logits, targets):
+        return self.nll_loss(F.log_softmax(logits), targets)
+
+#https://github.com/bermanmaxim/jaccardSegment/blob/master/losses.py
+class StableBCELoss(nn.modules.Module):
+       def __init__(self):
+             super(StableBCELoss, self).__init__()
+       def forward(self, input, target):
+             neg_abs = - input.abs()
+             loss = input.clamp(min=0) - input * target + (1 + neg_abs.exp()).log()
+             return loss.mean()
+
+class BCELoss2d(nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(BCELoss2d, self).__init__()
+        self.bce_loss = nn.BCELoss(weight, size_average)
+
+    def forward(self, logits, targets):
+        probs        = F.sigmoid(logits)
+        probs_flat   = probs.view (-1)
+        targets_flat = targets.view(-1)
+        return self.bce_loss(probs_flat, targets_flat)
+
+        #
+        # logits_flat  = logits.view (-1)
+        # targets_flat = targets.view(-1)
+        # return StableBCELoss()(logits_flat,targets_flat)
+
+
+class SoftDiceLoss(nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(SoftDiceLoss, self).__init__()
+
+
+    def forward(self, logits, targets):
+        num = targets.size(0)
+        probs = F.sigmoid(logits)
+        m1  = probs.view(num,-1)
+        m2  = targets.view(num,-1)
+        intersection = (m1 * m2)
+
+        score = 2. * (intersection.sum(1)+1) / (m1.sum(1) + m2.sum(1)+1)
+        score = 1- score.sum()/num
+        return score
+# ------------------------------------
+
+def outS(i): # output is 1/8 scale of origin
     i = int(i)
     i = (i+1)/2
     i = int(np.ceil((i+1)/2.0))
     i = (i+1)/2
     return i
-
+'''
 def conv3x3(in_planes, out_planes, stride=1):
     "3x3 convolution with padding"
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=1, bias=False)
-
-
+'''
+'''
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -49,7 +106,7 @@ class BasicBlock(nn.Module):
         out = self.relu(out)
 
         return out
-
+'''
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -58,13 +115,13 @@ class Bottleneck(nn.Module):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, stride=stride, bias=False) # change
         self.bn1 = nn.BatchNorm2d(planes,affine = affine_par)
-	for i in self.bn1.parameters():
+        for i in self.bn1.parameters():
             i.requires_grad = False
         padding = 1
         if dilation_ == 2:
-	    padding = 2
+            padding = 2
         elif dilation_ == 4:
-	    padding = 4
+            padding = 4
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, # change
                                padding=padding, bias=False, dilation = dilation_)
         self.bn2 = nn.BatchNorm2d(planes,affine = affine_par)
@@ -106,18 +163,18 @@ class Classifier_Module(nn.Module):
 
     def __init__(self,dilation_series,padding_series,NoLabels):
         super(Classifier_Module, self).__init__()
-	self.conv2d_list = nn.ModuleList()
-	for dilation,padding in zip(dilation_series,padding_series):
-	    self.conv2d_list.append(nn.Conv2d(2048,NoLabels,kernel_size=3,stride=1, padding =padding, dilation = dilation,bias = True))
+        self.conv2d_list = nn.ModuleList()
+        for dilation,padding in zip(dilation_series,padding_series):
+            self.conv2d_list.append(nn.Conv2d(2048,NoLabels,kernel_size=3,stride=1, padding =padding, dilation = dilation,bias = True))
 
         for m in self.conv2d_list:
             m.weight.data.normal_(0, 0.01)
 
 
     def forward(self, x):
-	out = self.conv2d_list[0](x)
-	for i in range(len(self.conv2d_list)-1):
-	    out += self.conv2d_list[i+1](x)
+        out = self.conv2d_list[0](x)
+        for i in range(len(self.conv2d_list)-1):
+            out += self.conv2d_list[i+1](x)
         return out
 
 
@@ -132,12 +189,13 @@ class ResNet(nn.Module):
         for i in self.bn1.parameters():
             i.requires_grad = False
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True) # change
+        # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True) # change
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation__ = 2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation__ = 4)
-	self.layer5 = self._make_pred_layer(Classifier_Module, [6,12,18,24],[6,12,18,24],NoLabels)
+        self.layer5 = self._make_pred_layer(Classifier_Module, [6,12,18,24],[6,12,18,24],NoLabels)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -157,8 +215,8 @@ class ResNet(nn.Module):
                           kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(planes * block.expansion,affine = affine_par),
             )
-        for i in downsample._modules['1'].parameters():
-            i.requires_grad = False
+            for i in downsample._modules['1'].parameters():
+                i.requires_grad = False
         layers = []
         layers.append(block(self.inplanes, planes, stride,dilation_=dilation__, downsample = downsample ))
         self.inplanes = planes * block.expansion
@@ -167,7 +225,7 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
     def _make_pred_layer(self,block, dilation_series, padding_series,NoLabels):
-	return block(dilation_series,padding_series,NoLabels)
+        return block(dilation_series,padding_series,NoLabels)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -178,34 +236,55 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-	x = self.layer5(x)
+        x = self.layer5(x)
 
         return x
 
 class MS_Deeplab(nn.Module):
     def __init__(self,block,NoLabels):
-	super(MS_Deeplab,self).__init__()
-	self.Scale = ResNet(block,[3, 4, 23, 3],NoLabels)   #changed to fix #4 
+        super(MS_Deeplab,self).__init__()
+        self.Scale = ResNet(block,[3, 4, 23, 3],NoLabels)   #changed to fix #4 
 
     def forward(self,x):
         input_size = x.size()[2]
-	self.interp1 = nn.UpsamplingBilinear2d(size = (  int(input_size*0.75)+1,  int(input_size*0.75)+1  ))
+        self.interp1 = nn.UpsamplingBilinear2d(size = (  int(input_size*0.75)+1,  int(input_size*0.75)+1  ))
         self.interp2 = nn.UpsamplingBilinear2d(size = (  int(input_size*0.5)+1,   int(input_size*0.5)+1   ))
         self.interp3 = nn.UpsamplingBilinear2d(size = (  outS(input_size),   outS(input_size)   ))
+        
+        ''' multi scale process
         out = []
         x2 = self.interp1(x)
         x3 = self.interp2(x)
-	out.append(self.Scale(x))	# for original scale
-	out.append(self.interp3(self.Scale(x2)))	# for 0.75x scale
-	out.append(self.Scale(x3))	# for 0.5x scale
+        out.append(self.Scale(x))	# for original scale
+        out.append(self.interp3(self.Scale(x2)))	# for 0.75x scale
+        out.append(self.interp3(self.Scale(x3)))	# for 0.5x scale
 
 
         x2Out_interp = out[1]
-        x3Out_interp = self.interp3(out[2])
+        x3Out_interp = out[2]
         temp1 = torch.max(out[0],x2Out_interp)
         out.append(torch.max(temp1,x3Out_interp))
-	return out
+        '''
+        # original scale
+        #test-------------
+        #print('x_size',x.size())
+        #-----------------
+        out = self.Scale(x) # 1/8 size of x eg 1024/8=128
+        #test-------------
+        #print('origin_out_size',out.size())
+        #-----------------
+        # upscale x8
+        out   = F.upsample_bilinear(out, scale_factor=2) #256
+        out   = F.upsample_bilinear(out, scale_factor=2) #512
+        out   = F.upsample_bilinear(out, scale_factor=2) #1024
+        #test-------------
+        #print('out_size',out.size())
+        #-----------------
 
-def Res_Deeplab(NoLabels=21):
+        return out
+
+# NoLabels means output channels, in this task should be 1
+def Res_Deeplab(in_shape, num_classes=1):
+    NoLabels = num_classes
     model = MS_Deeplab(Bottleneck,NoLabels)
     return model

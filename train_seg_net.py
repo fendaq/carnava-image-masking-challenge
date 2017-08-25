@@ -4,7 +4,8 @@ from dataset.carvana_cars import *
 # from net.segmentation.my_unet import SoftDiceLoss, BCELoss2d, UNet128 as Net1
 # from net.segmentation.res_unet_th import Res_UNet128 as Net2
 # from net.segmentation.deeplabV2_net import Res_UNet128_02 as Net
-from net.segmentation.my_unet import SoftDiceLoss, BCELoss2d, UNet_double_1024_5 as Net
+# from net.segmentation.my_unet import SoftDiceLoss, BCELoss2d, UNet_double_1024_5 as Net
+from model.deeplab_resnet import SoftDiceLoss, BCELoss2d, Res_Deeplab as Net
 from net.tool import *
 
 
@@ -263,7 +264,7 @@ def run_train():
     
     ## dataset ----------------------------------------
     log.write('** dataset setting **\n')
-    batch_size = 8
+    batch_size = 4
     
 #********    
     train_dataset = KgCarDataset( 'train_v0_4320',  #'train512x512_v0_4320'
@@ -274,7 +275,7 @@ def run_train():
                                     lambda x,y:  randomHorizontalFlip2(x,y),
                                 ],
                                 is_label=True,
-                                is_preload=True,)
+                                is_preload=False,)
     train_loader  = DataLoader(
                         train_dataset,
                         sampler = RandomSampler(train_dataset),  #ProbSampler(train_dataset),  #ProbSampler(train_dataset,SAMPLING_PROB),  # #FixedSampler(train_dataset,list(range(batch_size))),  ##
@@ -287,7 +288,7 @@ def run_train():
 #********
     valid_dataset = KgCarDataset( 'valid_v0_768',
                                 is_label=True,
-                                is_preload=True,)
+                                is_preload=False,)
     valid_loader  = DataLoader(
                         valid_dataset,
                         sampler = SequentialSampler(valid_dataset),
@@ -326,8 +327,8 @@ def run_train():
     log.write('%s\n\n'%(type(net)))
 
     ## optimiser ----------------------------------
-    # optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
-    optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
+    optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
+    # optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
 
     num_epoches = 35  #100
     it_print    = 1   #20
@@ -396,6 +397,12 @@ def run_train():
 
 
             #backward
+
+            #test--------
+            #print('logits size',logits.size(),'\n')
+            #print(labels.size())
+            #------------
+
             loss = criterion(logits, labels)
             optimizer.zero_grad()
             loss.backward()
