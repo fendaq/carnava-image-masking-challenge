@@ -328,6 +328,7 @@ def run_train():
 
     ## optimiser ----------------------------------
     optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
+    # optimizer = optim.RMSprop(net.parameters(), lr=0.0001)
     # optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
 
     # num_epoches = 35  #100
@@ -405,7 +406,7 @@ def run_train():
             #print('logits size',logits.size(),'\n')
             #print(labels.size())
             #------------
-            
+
             #caculate msc loss
             #----------------------------
             if net.name == 'Deeplabv2':
