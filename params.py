@@ -1,15 +1,15 @@
-# copy from keras ,wait to edit
-from model.u_net import get_unet_128, get_unet_256, get_unet_512, get_unet_1024
+from model.segment.uNet import UNet_double_1024, UNet_double_1024_deconv
 
-input_size = 128
+input_size = 1024
 
 max_epochs = 50
-batch_size = 16
+
+batch_size = 4
+test_batch_size = 8
 
 orig_width = 1918
 orig_height = 1280
 
-threshold = 0.5
+# threshold = 0.5
 
-model_factory = get_unet_128
-#-------------------------------
+model_factory = UNet_double_1024
