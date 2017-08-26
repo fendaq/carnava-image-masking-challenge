@@ -7,7 +7,8 @@ from dataset.carvana_cars import *
 from model.tool import *
 from model.segment.loss import SoftDiceLoss, BCELoss2d
 
-from model.segment.uNet import UNet_double_1024 as Net
+# rom model.segment.uNet import UNet_double_1024 as Net
+Net = params.model_factory
 
 ## experiment setting here ----------------------------------------------------
 def criterion(logits, labels):
@@ -41,9 +42,6 @@ def dice_loss(m1, m2 ):
     score = 2. * (intersection.sum(1)+1) / (m1.sum(1) + m2.sum(1)+1)
     score = score.sum()/num
     return score
-
-
-
 
 # def predict(net, test_loader):
 #
@@ -407,6 +405,13 @@ def run_train():
             #print('logits size',logits.size(),'\n')
             #print(labels.size())
             #------------
+            
+            #caculate msc loss
+            #----------------------------
+            if net.name == 'Deeplabv2':
+            # deeplabv2 model needs to sum multi-scale loss(1x,0.85x,0.5x,max)
+                pass
+            #----------------------------
 
             loss = criterion(logits, labels)
             optimizer.zero_grad()

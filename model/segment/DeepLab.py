@@ -244,10 +244,11 @@ class ResNet(nn.Module):
 
         return x
 
-class MS_Deeplab(nn.Module):
-    def __init__(self,block,NoLabels):
-        super(MS_Deeplab,self).__init__()
-        self.Scale = ResNet(block,[3, 4, 23, 3],NoLabels)   #changed to fix #4 
+class Deeplab_v2_resnet(nn.Module):
+    def __init__(self, in_shape, num_classes=1, name='Deeplabv2'):
+        super(Deeplab_v2_resnet,self).__init__()
+        self.Scale = ResNet(Bottleneck,[3, 4, 23, 3],num_classes)   #changed to fix #4 
+        self.name = name
 
     def forward(self,x):
         input_size = x.size()[2]
@@ -286,9 +287,3 @@ class MS_Deeplab(nn.Module):
         #-----------------
 
         return out
-
-# NoLabels means output channels, in this task should be 1
-def Deeplab_v2_resnet(in_shape, num_classes=1):
-    NoLabels = num_classes
-    model = MS_Deeplab(Bottleneck,NoLabels)
-    return model

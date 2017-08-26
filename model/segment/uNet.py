@@ -7,12 +7,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 ## -------------------------------------------------------------------------------------
-# note! bias = flase,inplace = true
+# note! in origin file bias = flase,inplace = true
 def make_conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, padding=1):
     return [
-        nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False),
+        nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding ),
         nn.BatchNorm2d(out_channels),
-        nn.ReLU(inplace=True),
+        nn.ReLU(),
     ]
 
 # uNet1024 upsampling use upsample_bilinear
