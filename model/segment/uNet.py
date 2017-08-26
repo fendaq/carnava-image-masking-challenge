@@ -262,52 +262,59 @@ class UNet_double_1024_deconv (nn.Module):
         #--------------------------------
         
         #16
+        self.deconv6 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)
         self.up6 = nn.Sequential(
-            *make_conv_bn_relu(512+1024,512, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu( 512+512,512, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     512,512, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     512,512, kernel_size=3, stride=1, padding=1 ),
             #nn.Dropout(p=0.10),
         )
         
         #32
+        self.deconv5 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
         self.up5 = nn.Sequential(
-            *make_conv_bn_relu(256+512,256, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu(256+256,256, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    256,256, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    256,256, kernel_size=3, stride=1, padding=1 ),
         )
         
         #64
+        self.deconv4 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
         self.up4 = nn.Sequential(
-            *make_conv_bn_relu(128+256,128, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu(128+128,128, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    128,128, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    128,128, kernel_size=3, stride=1, padding=1 ),
         )
 
         #128
+        self.deconv3 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
         self.up3 = nn.Sequential(
-            *make_conv_bn_relu( 64+128,64, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu(  64+64,64, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     64,64, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     64,64, kernel_size=3, stride=1, padding=1 ),
         )
 
         #256
+        self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2)
         self.up2 = nn.Sequential(
-            *make_conv_bn_relu( 32+64,32, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu( 32+32,32, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    32,32, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    32,32, kernel_size=3, stride=1, padding=1 ),
         )
 
         #512
         #-------------------------------------------------------------------------
+        self.deconv1 = nn.ConvTranspose2d(32, 16, kernel_size=2, stride=2)        
         self.up1 = nn.Sequential(
-            *make_conv_bn_relu( 16+32,16, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu( 16+16,16, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    16,16, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    16,16, kernel_size=3, stride=1, padding=1 ),
         )
 
         #1024
+        self.deconv0 = nn.ConvTranspose2d(16, 8, kernel_size=2, stride=2)        
         self.up0 = nn.Sequential(
-            *make_conv_bn_relu(  8+16,8, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu(   8+8,8, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     8,8, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     8,8, kernel_size=3, stride=1, padding=1 ),
         )
@@ -340,31 +347,38 @@ class UNet_double_1024_deconv (nn.Module):
 
         out   = self.center(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #16
+        #out   = F.upsample_bilinear(out, scale_factor=2) #16
+        out   = self.deconv6(out)
         out   = torch.cat([down6, out],1)
         out   = self.up6(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #32
+        #out   = F.upsample_bilinear(out, scale_factor=2) #32
+        out   = self.deconv5(out)
         out   = torch.cat([down5, out],1)
         out   = self.up5(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #64
+        #out   = F.upsample_bilinear(out, scale_factor=2) #64
+        out   = self.deconv4(out)
         out   = torch.cat([down4, out],1)
         out   = self.up4(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #128
+        #out   = F.upsample_bilinear(out, scale_factor=2) #128
+        out   = self.deconv3(out)
         out   = torch.cat([down3, out],1)
         out   = self.up3(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #256
+        #out   = F.upsample_bilinear(out, scale_factor=2) #256
+        out   = self.deconv2(out)
         out   = torch.cat([down2, out],1)
         out   = self.up2(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #512
+        #out   = F.upsample_bilinear(out, scale_factor=2) #512
+        out   = self.deconv1(out)
         out   = torch.cat([down1, out],1)
         out   = self.up1(out)
 
-        out   = F.upsample_bilinear(out, scale_factor=2) #1024
+        #out   = F.upsample_bilinear(out, scale_factor=2) #1024
+        out   = self.deconv0(out)
         out   = torch.cat([down0, out],1)
         #x     = F.upsample_bilinear(x,   scale_factor=2)
         #out   = torch.cat([x, out],1)

@@ -1,13 +1,13 @@
+import params
+
 from common import *
 from submit import *
 from dataset.carvana_cars import *
-# from net.segmentation.my_unet import SoftDiceLoss, BCELoss2d, UNet128 as Net1
-# from net.segmentation.res_unet_th import Res_UNet128 as Net2
-# from net.segmentation.deeplabV2_net import Res_UNet128_02 as Net
-# from net.segmentation.my_unet import SoftDiceLoss, BCELoss2d, UNet_double_1024_5 as Net
-from model.segment.deeplab import SoftDiceLoss, BCELoss2d, Res_Deeplab as Net
-from net.tool import *
 
+from model.tool import *
+from model.segment.loss import SoftDiceLoss, BCELoss2d
+
+from model.segment.uNet import UNet_double_1024 as Net
 
 ## experiment setting here ----------------------------------------------------
 def criterion(logits, labels):
@@ -264,7 +264,9 @@ def run_train():
     
     ## dataset ----------------------------------------
     log.write('** dataset setting **\n')
-    batch_size = 4
+    # batch_size = 4
+    batch_size = params.batch_size
+    
     
 #********    
     train_dataset = KgCarDataset( 'train_v0_4320',  #'train512x512_v0_4320'
@@ -330,12 +332,15 @@ def run_train():
     optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
     # optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
 
-    num_epoches = 35  #100
+    # num_epoches = 35  #100
+    num_epoches = params.max_epochs
     it_print    = 1   #20
     it_smooth   = 20
     epoch_test  = 5
     epoch_valid = 1
-    epoch_save  = [0,3,5,10,15,20,25,35,40,45,50, num_epoches-1]
+    # epoch_save  = [0,3,5,10,15,20,25,35,40,45,50, num_epoches-1]
+    epoch_save  = [int(x) for x in range(num_epoches) if x%2 == 0] 
+    epoch_save.append(num_epoches-1)
 
     ## resume from previous ----------------------------------
     start_epoch=0

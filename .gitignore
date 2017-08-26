@@ -7,5 +7,10 @@
 # Result
 result/*
 
+# notebook
+.ipynb_checkpoints/
+
 # Others
 todo
+*.ods
+test-notebook.ipynb
