@@ -15,6 +15,7 @@ def make_conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, paddin
         nn.ReLU(inplace=True),
     ]
 
+# uNet1024 upsampling use upsample_bilinear
 class UNet_double_1024_5 (nn.Module):
 
     def __init__(self, in_shape, num_classes):
@@ -194,3 +195,5 @@ class UNet_double_1024_5 (nn.Module):
 
 
 # https://gist.github.com/fsodogandji/e69dfecf153d4df62044b8ca385c4577 ----------------------------------------------------
+
+# uNet1024 learnable upsampling using deconv
