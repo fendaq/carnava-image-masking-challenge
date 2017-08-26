@@ -288,7 +288,7 @@ class MS_Deeplab(nn.Module):
         return out
 
 # NoLabels means output channels, in this task should be 1
-def Res_Deeplab(in_shape, num_classes=1):
+def Deeplab_v2_resnet(in_shape, num_classes=1):
     NoLabels = num_classes
     model = MS_Deeplab(Bottleneck,NoLabels)
     return model
