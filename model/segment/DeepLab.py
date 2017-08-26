@@ -1,17 +1,19 @@
 from common import *
-''' 
+
 import torch.nn as nn
 import math
 import torch.utils.model_zoo as model_zoo
 import torch 
 import numpy as np
-'''
+
 affine_par = True
 
 # -----------------------------------
+
 # Loss copy from my_unet
 #  https://github.com/bermanmaxim/jaccardSegment/blob/master/losses.py
 #  https://discuss.pytorch.org/t/solved-what-is-the-correct-way-to-implement-custom-loss-function/3568/4
+'''
 class CrossEntropyLoss2d(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(CrossEntropyLoss2d, self).__init__()
@@ -61,6 +63,8 @@ class SoftDiceLoss(nn.Module):
         score = 2. * (intersection.sum(1)+1) / (m1.sum(1) + m2.sum(1)+1)
         score = 1- score.sum()/num
         return score
+
+'''
 # ------------------------------------
 
 def outS(i): # output is 1/8 scale of origin

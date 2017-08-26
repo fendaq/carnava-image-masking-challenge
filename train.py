@@ -5,7 +5,7 @@ from dataset.carvana_cars import *
 # from net.segmentation.res_unet_th import Res_UNet128 as Net2
 # from net.segmentation.deeplabV2_net import Res_UNet128_02 as Net
 # from net.segmentation.my_unet import SoftDiceLoss, BCELoss2d, UNet_double_1024_5 as Net
-from model.deeplab_resnet import SoftDiceLoss, BCELoss2d, Res_Deeplab as Net
+from model.segment.deeplab import SoftDiceLoss, BCELoss2d, Res_Deeplab as Net
 from net.tool import *
 
 
