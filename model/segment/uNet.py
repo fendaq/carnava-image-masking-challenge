@@ -16,58 +16,70 @@ def make_conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, paddin
     ]
 
 # uNet1024 upsampling use upsample_bilinear
-class UNet_double_1024_5 (nn.Module):
+class UNet_double_1024 (nn.Module):
 
     def __init__(self, in_shape, num_classes):
         super(UNet_double_1024_5, self).__init__()
         in_channels, height, width = in_shape
 
-
+        #1024
+        self.down0 = nn.Sequential(
+            *make_conv_bn_relu(in_channels, 8,kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu( 8,  8, kernel_size=3, stride=1, padding=1 ),
+        )
+        
         #512
         self.down1 = nn.Sequential(
-            *make_conv_bn_relu(in_channels, 16, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu( 8, 16, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(16, 16, kernel_size=3, stride=1, padding=1 ),
         )
-        #256
-
-
-        #UNet512_2 ------------------------------------------------------------------------
+        
         #256
         self.down2 = nn.Sequential(
             *make_conv_bn_relu(16, 32, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(32, 32, kernel_size=3, stride=1, padding=1 ),
         )
+        
         #128
-
         self.down3 = nn.Sequential(
             *make_conv_bn_relu(32, 64, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(64, 64, kernel_size=3, stride=1, padding=1 ),
         )
-        #64
 
+        #64
         self.down4 = nn.Sequential(
             *make_conv_bn_relu(64,  128, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(128, 128, kernel_size=3, stride=1, padding=1 ),
         )
+        
         #32
-
         self.down5 = nn.Sequential(
             *make_conv_bn_relu(128, 256, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(256, 256, kernel_size=3, stride=1, padding=1 ),
         )
-        #16
 
+        #16
         self.down6 = nn.Sequential(
             *make_conv_bn_relu(256,512, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(512,512, kernel_size=3, stride=1, padding=1 ),
         )
-        #8
-
-        self.center = nn.Sequential(
+        
+        '''
+        #16
+        self.down7 = nn.Sequential(
             *make_conv_bn_relu(512, 1024, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(1024,1024, kernel_size=3, stride=1, padding=1 ),
         )
+        '''
 
+        #8
+        #--------------------------------
+        self.center = nn.Sequential(
+            *make_conv_bn_relu(1024,1024, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu(1024,1024, kernel_size=3, stride=1, padding=1 ),
+        )
+        #--------------------------------
+        
         #16
         self.up6 = nn.Sequential(
             *make_conv_bn_relu(512+1024,512, kernel_size=3, stride=1, padding=1 ),
@@ -75,62 +87,63 @@ class UNet_double_1024_5 (nn.Module):
             *make_conv_bn_relu(     512,512, kernel_size=3, stride=1, padding=1 ),
             #nn.Dropout(p=0.10),
         )
-        #16
-
+        
+        #32
         self.up5 = nn.Sequential(
             *make_conv_bn_relu(256+512,256, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    256,256, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    256,256, kernel_size=3, stride=1, padding=1 ),
         )
-        #32
-
+        
+        #64
         self.up4 = nn.Sequential(
             *make_conv_bn_relu(128+256,128, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    128,128, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    128,128, kernel_size=3, stride=1, padding=1 ),
         )
-        #64
 
+        #128
         self.up3 = nn.Sequential(
             *make_conv_bn_relu( 64+128,64, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     64,64, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     64,64, kernel_size=3, stride=1, padding=1 ),
         )
-        #128
 
+        #256
         self.up2 = nn.Sequential(
             *make_conv_bn_relu( 32+64,32, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    32,32, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    32,32, kernel_size=3, stride=1, padding=1 ),
         )
-        #128
-        #-------------------------------------------------------------------------
 
+        #512
+        #-------------------------------------------------------------------------
         self.up1 = nn.Sequential(
             *make_conv_bn_relu( 16+32,16, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    16,16, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(    16,16, kernel_size=3, stride=1, padding=1 ),
         )
-        #128
 
+        #1024
         self.up0 = nn.Sequential(
-            *make_conv_bn_relu(  3+16,8, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu(  8+16,8, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     8,8, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(     8,8, kernel_size=3, stride=1, padding=1 ),
         )
-        #128
 
         self.classify = nn.Conv2d(8, num_classes, kernel_size=1, stride=1, padding=0 )
 
 
     def forward(self, x):
 
-        #512
+        #1024
+        down0 = self.down0(x)
+        out   = F.max_pool2d(down0, kernel_size=2, stride=2) #512
         down1 = self.down1(x)
-        out   = F.max_pool2d(down1, kernel_size=2, stride=2) #64
+        out   = F.max_pool2d(down1, kernel_size=2, stride=2) #256
 
         down2 = self.down2(out)
-        out   = F.max_pool2d(down2, kernel_size=2, stride=2) #64
+        out   = F.max_pool2d(down2, kernel_size=2, stride=2) #128
 
         down3 = self.down3(out)
         out   = F.max_pool2d(down3, kernel_size=2, stride=2) #64
@@ -170,29 +183,16 @@ class UNet_double_1024_5 (nn.Module):
         out   = torch.cat([down1, out],1)
         out   = self.up1(out)
 
-        #out   = F.upsample_bilinear(out, scale_factor=2) #1024
+        out   = F.upsample_bilinear(out, scale_factor=2) #1024
+        out   = torch.cat([down0, out],1)
         #x     = F.upsample_bilinear(x,   scale_factor=2)
-        out   = torch.cat([x, out],1)
+        #out   = torch.cat([x, out],1)
         out   = self.up0(out)
 
 
         out   = self.classify(out)
 
         return out
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # https://gist.github.com/fsodogandji/e69dfecf153d4df62044b8ca385c4577 ----------------------------------------------------
 
