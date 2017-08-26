@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+'''
 #  https://github.com/bermanmaxim/jaccardSegment/blob/master/losses.py
 #  https://discuss.pytorch.org/t/solved-what-is-the-correct-way-to-implement-custom-loss-function/3568/4
 class CrossEntropyLoss2d(nn.Module):
@@ -58,9 +59,9 @@ class SoftDiceLoss(nn.Module):
         score = 1- score.sum()/num
         return score
 
-
+'''
 ## -------------------------------------------------------------------------------------
-
+# note! bias = flase,inplace = true
 def make_conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, padding=1):
     return [
         nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False),
@@ -68,7 +69,7 @@ def make_conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, paddin
         nn.ReLU(inplace=True),
     ]
 
-
+# input 128*128, output 128*128. use upsample_bilinear
 class UNet128 (nn.Module):
 
     def __init__(self, in_shape, num_classes):
@@ -175,7 +176,7 @@ class UNet128 (nn.Module):
 
 
 
-# a bigger version for 256x256
+# a bigger version for 256x256, similar to unet128
 class UNet256 (nn.Module):
 
     def __init__(self, in_shape, num_classes):
