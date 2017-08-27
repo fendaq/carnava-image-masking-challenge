@@ -19,7 +19,7 @@ def make_conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, paddin
 class UNet_double_1024 (nn.Module):
 
     def __init__(self, in_shape, num_classes):
-        super(UNet_double_1024_5, self).__init__()
+        super(UNet_double_1024, self).__init__()
         in_channels, height, width = in_shape
 
         #1024
@@ -75,7 +75,7 @@ class UNet_double_1024 (nn.Module):
         #8
         #--------------------------------
         self.center = nn.Sequential(
-            *make_conv_bn_relu(1024,1024, kernel_size=3, stride=1, padding=1 ),
+            *make_conv_bn_relu(512,1024, kernel_size=3, stride=1, padding=1 ),
             *make_conv_bn_relu(1024,1024, kernel_size=3, stride=1, padding=1 ),
         )
         #--------------------------------
@@ -139,7 +139,8 @@ class UNet_double_1024 (nn.Module):
         #1024
         down0 = self.down0(x)
         out   = F.max_pool2d(down0, kernel_size=2, stride=2) #512
-        down1 = self.down1(x)
+
+        down1 = self.down1(out)
         out   = F.max_pool2d(down1, kernel_size=2, stride=2) #256
 
         down2 = self.down2(out)

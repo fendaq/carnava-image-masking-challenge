@@ -1,3 +1,5 @@
+import params
+
 from common import *
 from dataset.mask import *
 
@@ -5,9 +7,10 @@ CARVANA_DIR       = '/Kaggle/kaggle-carvana-cars-2017'  #'/root/share/data/kaggl
 CARVANA_NUM_VIEWS = 16
 CARVANA_HEIGHT = 1280
 CARVANA_WIDTH  = 1918
-CARVANA_H = 512
-CARVANA_W = 512
-
+#CARVANA_H = 512
+#CARVANA_W = 512
+CARVANA_H = params.input_size
+CARVANA_W = params.input_size
 
 
 #data iterator ----------------------------------------------------------------

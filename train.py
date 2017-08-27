@@ -409,9 +409,9 @@ def run_train():
 
             #caculate msc loss
             #----------------------------
-            if net.name == 'Deeplabv2':
+            #if net.name == 'Deeplabv2':
             # deeplabv2 model needs to sum multi-scale loss(1x,0.85x,0.5x,max)
-                pass
+            #    pass
             #----------------------------
 
             loss = criterion(logits, labels)
