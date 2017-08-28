@@ -1,13 +1,16 @@
 # deeplabv3 并行实现
+from common import *
 
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import math
 import torch.utils.model_zoo as model_zoo
 
-
+'''
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
-
+'''
 
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
@@ -59,12 +62,18 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
+    def __init__(self, inplanes, planes, stride=1, dilation_ = 1, downsample=None):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
+        if dilation_ == 2:
+            padding = 2
+        elif dilation_ == 4:
+            padding = 4
+        elif dilation_ == 8:
+            padding = 8
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                               padding=1, bias=False)
+                               padding=padding, bias=False, dilation=dilation_)
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes * 4)
@@ -94,23 +103,70 @@ class Bottleneck(nn.Module):
 
         return out
 
+class ASPP(nn.Module): #Atrous Spatial Pyramid Pooling
+    
+    def __init__(self, dilation_series, padding_series, num_classes): 
+        super(ASPP, self).__init__()
+        self.conv2d_list = nn.ModuleList()
+        self.conv2d_list.append(nn.Conv2d(2048, 512, kernel_size=1))
+        for dilation_, padding_ in zip(dilation_series, padding_series):
+            self.conv2d_list.append(nn.Conv2d(2048, 512, kernel_size=3, stride=1, padding=padding_, dilation=dilation_))
+
+        self.bn1 = nn.BatchNorm2d(512)
+        self.bn2 = nn.BatchNorm2d(512)
+        self.bn3 = nn.BatchNorm2d(512)
+        self.bn4 = nn.BatchNorm2d(512)
+
+        self.conv = nn.Conv2d(2048,512,kernel_size=1)
+        self.bn = nn.BatchNorm2d(512)
+
+        self.classify = nn.Conv2d(512, num_classes, kernel_size=1)
+        
+        # average pool wait to implement
+
+    def forward(self, x):
+        out0 = self.conv2d_list[0](x)
+        out0 = self.bn1(out0)
+
+        out1 = self.conv2d_list[1](x)
+        out1 = self.bn2(out1)
+
+        out2 = self.conv2d_list[2](x)
+        out2 = self.bn3(out2)
+
+        out3 = self.conv2d_list[3](x)
+        out3 = self.bn4(out3)
+    
+        sum = torch.cat([out0,out1,out2,out3],1)
+
+        out = self.conv(sum)
+        out = self.bn(out)
+
+        out = self.classify(out)
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, num_classes=1000):
+    def __init__(self, block, layers, num_classes):
         self.inplanes = 64
         super(ResNet, self).__init__()
+        '''
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        self.avgpool = nn.AvgPool2d(7)
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        '''
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=1, padding=6, dilation=2)
+        self.bn1 = nn.BatchNorm2d(64)
+
+        #self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+
+        self.layer1 = self._make_layer(block, 64, layers[0], stride=1, dilation__= 4)
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=1, dilation__ = 2)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation__ = 4)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation__ = 2)
+        self.layer5 = self._make_pred_layer(ASPP, [6,12,18],[6,12,18], num_classes)
+        # self.avgpool = nn.AvgPool2d(7)
+        # self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -120,7 +176,7 @@ class ResNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _make_layer(self, block, planes, blocks, stride=1):
+    def _make_layer(self, block, planes, blocks, stride=1, dilation__ = 1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -130,12 +186,15 @@ class ResNet(nn.Module):
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample))
+        layers.append(block(self.inplanes, planes, stride, dilation_ = dilation__, downsample = downsample))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
             layers.append(block(self.inplanes, planes))
 
         return nn.Sequential(*layers)
+
+    def _make_pred_layer(self, block, dilation_series, padding_series, num_classes):
+        return block(dilation_series, padding_series, num_classes)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -147,14 +206,24 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
+        x = self.layer5(x)
 
-        x = self.avgpool(x)
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
+        # x = self.avgpool(x)
+        # x = x.view(x.size(0), -1)
+        # x = self.fc(x)
 
         return x
 
+class Deeplabv3_parallel(nn.Module):
+    def __init__(self, in_shape, num_classes=1):
+        super(Deeplabv3_parallel,self).__init__()
+        self.process = ResNet(Bottleneck, [3, 4, 23, 3], num_classes)
+    
+    def forward(self,x):
+        out = self.process(x)
+        return out
 
+'''
 def resnet18(pretrained=False, **kwargs):
     """Constructs a ResNet-18 model.
 
@@ -213,4 +282,4 @@ def resnet152(pretrained=False, **kwargs):
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet152']))
     return model
-
+'''
