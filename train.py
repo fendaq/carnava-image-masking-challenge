@@ -5,15 +5,33 @@ from submit import *
 from dataset.carvana_cars import *
 
 from model.tool import *
-from model.segment.loss import SoftDiceLoss, BCELoss2d
+from model.segment.loss import *
 
 # from model.segment.uNet import UNet_double_1024 as Net
 Net = params.model_factory
 
 ## experiment setting here ----------------------------------------------------
-def criterion(logits, labels):
+def criterion(logits, labels, is_weight=False):
     #l = BCELoss2d()(logits, labels)
-    l = BCELoss2d()(logits, labels) + SoftDiceLoss()(logits, labels)
+    #computer weights
+    kernel_size = 41
+    a   = F.avg_pool2d(labels,kernel_size=kernel_size,padding=kernel_size//2,stride=1)
+    ind = a.ge(0.01) * a.le(0.99)
+    ind = ind.float()
+    weights  = Variable(torch.tensor.torch.ones(a.size())).cuda()
+    if is_weight:
+        w0 = weights.sum()
+        #w0 = w0[0]
+        #print('again',w0.size())
+        weights = weights + ind*2
+        w1 = weights.sum()
+        #print(w1)
+        weights = weights/w1*w0
+        #weights = weights.div(w1).mul(w0)
+        l = WeightedBCELoss2d()(logits, labels, weights) + \
+        WeightedSoftDiceLoss()(logits, labels, weights)
+    else:
+        l = BCELoss2d()(logits, labels) + SoftDiceLoss()(logits, labels)
     return l
 
 

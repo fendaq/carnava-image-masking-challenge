@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 # turn into pytorch
@@ -52,4 +53,34 @@ class SoftDiceLoss(nn.Module):
 
         score = 2. * (intersection.sum(1)+1) / (m1.sum(1) + m2.sum(1)+1)
         score = 1- score.sum()/num
+        return score
+
+class WeightedBCELoss2d(nn.Module):
+    def __init__(self):
+        super(WeightedBCELoss2d, self).__init__()
+
+    def forward(self, logits, labels, weights):
+        w = weights.view(-1)
+        z = logits.view (-1)
+        t = labels.view (-1)
+        loss = w*z.clamp(min=0) - w*z*t + w*torch.log(1 + torch.exp(-z.abs()))
+        loss = loss.sum()/w.sum()
+        return loss
+
+
+
+class WeightedSoftDiceLoss(nn.Module):
+    def __init__(self):
+        super(WeightedSoftDiceLoss, self).__init__()
+
+    def forward(self, logits, labels, weights):
+        probs = F.sigmoid(logits)
+        num   = labels.size(0)
+        w     = (weights).view(num,-1)
+        w2    = w*w
+        m1    = (probs  ).view(num,-1)
+        m2    = (labels ).view(num,-1)
+        intersection = (m1 * m2)
+        score = 2. * ((w2*intersection).sum(1)+1) / ((w2*m1).sum(1) + (w2*m2).sum(1)+1)
+        score = 1 - score.sum()/num
         return score

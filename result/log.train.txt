@@ -70,3 +70,141 @@ epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ..
  48.0    1080    0.0100   |  0.0521  0.9789 | 0.0591  0.9737 | 0.0132  0.9948  |  8.0 min 
  49.0    1080    0.0010   |  0.0391  0.9837 | 0.0357  0.9858 | 0.0116  0.9954  |  8.0 min 
  50.0    1080    0.0010   |  0.0362  0.9846 | 0.0740  0.9706 | 0.0115  0.9954  |  7.9 min 
+
+--- [START 2017-08-29 13:39:20] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train.py
+	out_dir = ./result
+
+** dataset setting **
+	batch_size          = 4
+	train_dataset.split = train_v0_4320
+	valid_dataset.split = valid_v0_768
+	test_dataset.split  = test_3197
+	len(train_dataset)  = 4320
+	len(valid_dataset)  = 768
+	len(test_dataset)   = 3197
+** net setting **
+<class 'model.segment.uNet.UNet_double_1024'>
+
+** start training here! **
+
+epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ... 
+--------------------------------------------------------------------------------------------------
+
+--- [START 2017-08-29 13:40:29] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train.py
+	out_dir = ./result
+
+** dataset setting **
+	batch_size          = 8
+	train_dataset.split = train_v0_4320
+	valid_dataset.split = valid_v0_768
+	test_dataset.split  = test_3197
+	len(train_dataset)  = 4320
+	len(valid_dataset)  = 768
+	len(test_dataset)   = 3197
+** net setting **
+<class 'model.segment.uNet.UNet_double_1024'>
+
+** start training here! **
+
+epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ... 
+--------------------------------------------------------------------------------------------------
+
+--- [START 2017-08-29 14:29:02] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train.py
+	out_dir = ./result
+
+** dataset setting **
+	batch_size          = 8
+	train_dataset.split = train_v0_4320
+	valid_dataset.split = valid_v0_768
+	test_dataset.split  = test_3197
+	len(train_dataset)  = 4320
+	len(valid_dataset)  = 768
+	len(test_dataset)   = 3197
+** net setting **
+<class 'model.segment.uNet.UNet_double_1024'>
+
+** start training here! **
+
+epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ... 
+--------------------------------------------------------------------------------------------------
+
+--- [START 2017-08-29 14:29:24] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train.py
+	out_dir = ./result
+
+** dataset setting **
+	batch_size          = 4
+	train_dataset.split = train_v0_4320
+	valid_dataset.split = valid_v0_768
+	test_dataset.split  = test_3197
+	len(train_dataset)  = 4320
+	len(valid_dataset)  = 768
+	len(test_dataset)   = 3197
+** net setting **
+<class 'model.segment.uNet.UNet_double_1024'>
+
+** start training here! **
+
+epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ... 
+--------------------------------------------------------------------------------------------------
+
+--- [START 2017-08-29 14:40:07] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train.py
+	out_dir = ./result
+
+** dataset setting **
+	batch_size          = 4
+	train_dataset.split = train_v0_4320
+	valid_dataset.split = valid_v0_768
+	test_dataset.split  = test_3197
+	len(train_dataset)  = 4320
+	len(valid_dataset)  = 768
+	len(test_dataset)   = 3197
+** net setting **
+<class 'model.segment.uNet.UNet_double_1024'>
+
+** start training here! **
+
+epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ... 
+--------------------------------------------------------------------------------------------------
+
+--- [START 2017-08-29 14:57:35] ----------------------------------------------------------------
+
+** some project setting **
+	SEED    = 235202
+	file    = train.py
+	out_dir = ./result
+
+** dataset setting **
+	batch_size          = 4
+	train_dataset.split = train_v0_4320
+	valid_dataset.split = valid_v0_768
+	test_dataset.split  = test_3197
+	len(train_dataset)  = 4320
+	len(valid_dataset)  = 768
+	len(test_dataset)   = 3197
+** net setting **
+<class 'model.segment.uNet.UNet_double_1024'>
+
+** start training here! **
+
+epoch    iter      rate   | smooth_loss/acc | train_loss/acc | valid_loss/acc ... 
+--------------------------------------------------------------------------------------------------
