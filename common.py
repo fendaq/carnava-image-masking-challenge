@@ -32,6 +32,7 @@ import torch.backends.cudnn as cudnn
 
 import torch.utils.model_zoo as model_zoo
 
+
 # std libs
 import collections
 import types
@@ -41,6 +42,8 @@ import shutil
 #import pickle
 import dill
 from timeit import default_timer as timer   #ubuntu:  default_timer = time.time,  seconds
+#import time
+
 from datetime import datetime
 import csv
 import pandas as pd
@@ -66,6 +69,11 @@ updating pytorch
     conda update pytorch torchvision
     conda install pytorch torchvision cuda80 -c soumith
     
+check cudnn version
+
+https://discuss.pytorch.org/t/cuda-cudnn-basics/6214
+torch.backends.cudnn.version()
+torch.cuda.is_available()
 
 '''
 
