@@ -1,6 +1,6 @@
 # unet from scratch
 from common import *
-from net.segmentation.loss import *
+from model.segmentation.loss import *
 
 import torch
 import torch.nn as nn
