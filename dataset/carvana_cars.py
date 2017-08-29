@@ -1,267 +1,203 @@
-import params
-
 from common import *
 from dataset.mask import *
 
-CARVANA_DIR       = '/Kaggle/kaggle-carvana-cars-2017'  #'/root/share/data/kaggle-carvana-cars-2017'
+
+#CARVANA_DIR = '/root/share/data/kaggle-carvana-cars-2017'
+#CARVANA_DIR = '/media/ssd/data/kaggle-carvana-cars-2017'
+CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
 CARVANA_NUM_VIEWS = 16
 CARVANA_HEIGHT = 1280
 CARVANA_WIDTH  = 1918
-#CARVANA_H = 512
-#CARVANA_W = 512
-CARVANA_H = params.input_size
-CARVANA_W = params.input_size
+
+CARVANA_H = 1024
+CARVANA_W = 1024
+
+#debug and show
+def make_results_image(image, label, prob=None, label_color=2, prob_color=1):
+
+    H,W,C = image.shape
+    results = np.zeros((H, 3*W, 3),np.uint8)
+    p       = np.zeros((H*W, 3),np.uint8)
+
+    l = np.zeros((H*W),np.uint8)
+    m = np.zeros((H*W),np.uint8)
+    image1= image.copy()
+    if prob is not None:
+        m = (prob>127).reshape(-1)
+        draw_contour(image1, prob, color=(0,255,0), thickness=1)
+    if label is not None:
+        l = (label>127).reshape(-1)
+        draw_contour(image1, label, color=(0,0,255), thickness=1)
+
+    a = (2*l+m)
+    miss = np.where(a==2)[0]
+    hit  = np.where(a==3)[0]
+    fp   = np.where(a==1)[0]
+    p[miss] = np.array([0,0,255])
+    p[hit]  = np.array([64,64,64])
+    p[fp]   = np.array([0,255,0])
+    p       = p.reshape(H,W,3)
+
+    results[:,  0:W  ] = image1
+    results[:,  W:2*W] = p
+    results[:,2*W:3*W] = image  # image * α + mask * β + λ
+    return results
+
+
 
 
 #data iterator ----------------------------------------------------------------
 
-class KgCarDataset_1x(Dataset):
-
-    def __init__(self, split, transform=[], is_label=True, is_preload=True):
-        channel,height,width = 3, CARVANA_H, CARVANA_W
-
-        # read names
-        split_file = CARVANA_DIR +'/split/'+ split
-        with open(split_file) as f:
-            names = f.readlines()
-        names = [name.strip()for name in names]
-        num = len(names)
-
-        #read images
-        images = None
-        if is_preload==True:
-            images = np.zeros((num,height,width,channel),dtype=np.float32)
-            for n in range(num):
-                name = names[n]
-                img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
-                img = cv2.imread(img_file)
-
-                #img = cv2.cvtColor(img,cv2.COLOR_fBGR2HSV)
-                img = cv2.resize(img,(width,height))
-                images[n] = img/255.
-
-                #debug
-                #print(n)
-
-        #read labels
-        labels = None
-        if is_label==True:
-            labels = np.zeros((num,height,width),dtype=np.float32)
-            for n in range(num):
-                name = names[n]
-                shortname = name.split('/')[-1]
-                # mask_file = CARVANA_DIR + '/annotations/%s_mask.gif'%(name)
-                # mask = PIL.Image.open(mask_file)   #opencv does not read gif
-                # mask = np.array(mask)
-
-                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)                
-                mask = cv2.imread(mask_file,cv2.IMREAD_GRAYSCALE)
-                mask = cv2.resize(mask,(width,height))
-                labels[n] = mask/255
-
-                #debug
-                if 0:
-                    im_show('mask1', mask*255, resize=1)
-                    cv2.waitKey(0)
-
-
-        #save
-        self.split     = split
-        self.transform = transform
-        self.names  = names
-        self.images = images
-        self.labels = labels
-
-
-
-    #https://discuss.pytorch.org/t/trying-to-iterate-through-my-custom-dataset/1909
-    def __getitem__(self, index):
-
-        if self.images is None:
-            name = self.names[index]
-            img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
-            img   = cv2.imread(img_file)
-            #img = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-
-            image = img.astype(np.float32)/255
-        else:
-            image = self.images[index]
-
-
-        if self.labels is None:
-            for t in self.transform:
-                image = t(image)
-            image = image_to_tensor(image)
-            return image, index
-
-        else:
-            label = self.labels[index]
-            for t in self.transform:
-                image,label = t(image,label)
-            image = image_to_tensor(image)
-            label = label_to_tensor(label)
-            return image, label, index
-
-
-    def __len__(self):
-        #print ('\tcalling Dataset:__len__')
-        return len(self.names)
-
-
-# 2x label
 class KgCarDataset(Dataset):
 
-    def __init__(self, split, transform=[], is_label=True, is_preload=True):
-        self.channel, self.height, self.width = 3, CARVANA_H, CARVANA_W
-        self.is_label = is_label
+    def __init__(self, split, folder, transform=[], mode='train'):
+        super(KgCarDataset, self).__init__()
+
         # read names
         split_file = CARVANA_DIR +'/split/'+ split
         with open(split_file) as f:
             names = f.readlines()
         names = [name.strip()for name in names]
-        num = len(names)
+        num   = len(names)
 
-        #read images
-        images = None
-        if is_preload==True:
-            images = np.zeros((num,self.height,self.width,self.channel),dtype=np.float32)
-            for n in range(num):
-                name = names[n]
-                img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
-                img = cv2.imread(img_file)
-                
-                #img = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-                img = cv2.resize(img,(self.width,self.height))
-                images[n] = img/255.
-
-                #debug
-                #print(n)
-
-        #read labels
-        labels = None
-        if self.is_label==True:
-            if is_preload==True:
-                labels = np.zeros((num, self.height, self.width),dtype=np.float32)
-                for n in range(num):
-                    name = names[n]
-                    #name = name.replace('%dx%d'%(height,width),'%dx%d'%(2*height,2*width))
-
-                    mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)                    
-                    mask = cv2.imread(mask_file, cv2.IMREAD_GRAYSCALE)                   
-                    mask = cv2.resize(mask,(self.width, self.height))
-                    labels[n] = mask/255
-
-                    #debug
-                    if 0:
-                        im_show('mask1', mask*255, resize=1)
-                        cv2.waitKey(0)
-
+        #meta data
+        df = pd.read_csv(CARVANA_DIR +'/metadata.csv')
 
         #save
-        self.split      = split
-        self.transform  = transform
-        self.names  = names
-        self.images = images
-        self.labels = labels
+        self.df        = df
+        self.split     = split
+        self.folder    = folder
+        self.transform = transform
 
+        self.mode      = mode
+        self.names     = names
 
 
     #https://discuss.pytorch.org/t/trying-to-iterate-through-my-custom-dataset/1909
+    def get_image(self,index):
+        name   = self.names[index]
+        folder = self.folder
+        id     = name[:-3]
+        view   = int(name[-2:])-1
+
+        #img_file = CARVANA_DIR + '/images/%s/%s.jpg'%(folder,name)
+        img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
+        #print(img_file)
+        img   = cv2.imread(img_file)
+        img = cv2.resize(img,(CARVANA_W,CARVANA_H))
+        image = img.astype(np.float32)/255
+        return image
+
+    def get_label(self,index):
+        name   = self.names[index]
+        folder = self.folder
+
+        #mask_file = CARVANA_DIR + '/annotations/%s/%s_mask.png'%(folder,name)
+        if 'test' in folder: mask_file = CARVANA_DIR + '/priors/%s/%s.png'%(folder,name)
+        #else:                mask_file = CARVANA_DIR + '/annotations/%s/%s_mask.png'%(folder,name)
+        else:                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
+
+        mask = cv2.imread(mask_file,cv2.IMREAD_GRAYSCALE)
+        mask = cv2.resize(mask,(CARVANA_W,CARVANA_H))
+        label = mask.astype(np.float32)/255
+        return label
+
+    def get_train_item(self,index):
+        image = self.get_image(index)
+        label = self.get_label(index)
+
+        for t in self.transform:
+            image,label = t(image,label)
+        image = image_to_tensor(image)
+        label = label_to_tensor(label)
+        return image, label, index
+
+    def get_test_item(self,index):
+        image = self.get_image(index)
+
+        for t in self.transform:
+            image = t(image)
+        image = image_to_tensor(image)
+        return image, index
+
+
     def __getitem__(self, index):
 
-        if self.images is None:
-            name = self.names[index]
-            img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
-            img = cv2.imread(img_file)
-            
-            img = cv2.resize(img,(self.width, self.height))
-            
-            image = img.astype(np.float32)/255
-        else:
-            image = self.images[index]
-
-
-        if self.is_label == False:
-            for t in self.transform:
-                image = t(image)
-            image = image_to_tensor(image)
-            return image, index
-
-        else:
-            if self.labels is None:
-                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
-                
-                mask = cv2.imread(mask_file, cv2.IMREAD_GRAYSCALE)
-                
-                mask = cv2.resize(mask,(self.width, self.height))
-                label = mask/255
-                for t in self.transform:
-                    image,label = t(image,label)
-                image = image_to_tensor(image)
-                label = label_to_tensor(label)
-                return image, label, index
-            else:
-                label = self.labels[index]
-                for t in self.transform:
-                    image,label = t(image,label)
-                image = image_to_tensor(image)
-                label = label_to_tensor(label)
-                return image, label, index
+        if self.mode=='train': return self.get_train_item(index)
+        if self.mode=='test':  return self.get_test_item (index)
 
     def __len__(self):
-        #print ('\tcalling Dataset:__len__')
         return len(self.names)
 
+
+
 #-----------------------------------------------------------------------
+def check_dataset(dataset, loader, wait=0):
 
-def check_dataset(dataset, loader):
-
-    if dataset.labels is not None:
+    if dataset.mode=='train':
         for i, (images, labels, indices) in enumerate(loader, 0):
             print('i=%d: '%(i))
 
             num = len(images)
             for n in range(num):
+                print(indices[n])
                 image = images[n]
                 label = labels[n]
                 image = tensor_to_image(image, std=255)
                 label = tensor_to_label(label)
 
-                im_show('image', image, resize=1)
-                im_show('label', label, resize=1)
-                cv2.waitKey(1)
+                results = make_results_image(image, label, prob=None)
+                im_show('results', results, resize=0.5)
 
+                #im_show('image', image, resize=1)
+                #im_show('label', label, resize=1)
+                cv2.waitKey(wait)
 
+    if dataset.mode=='test':
+        for i, (images, indices) in enumerate(loader, 0):
+            print('i=%d: '%(i))
+
+            num = len(images)
+            for n in range(num):
+                image = images[n]
+                image = tensor_to_image(image, std=255)
+
+                im_show('image', image, resize=0.5)
+                cv2.waitKey(wait)
 
 
 
 def run_check_dataset():
-    dataset = KgCarDataset( 'train%dx%d_5088'%(CARVANA_H,CARVANA_W),  #'train_5088'
+
+    dataset = KgCarDataset('valid_v0_768', #'train_v0_4320', #'train512x512', 
+                           'train',
                                 transform=[
-                                    lambda x,y:  randomShiftScaleRotate2(x,y,shift_limit=(-0.0625,0.0625), scale_limit=(-0.0,0.0),  aspect_limit = (1-1/1.2   ,1.2-1), rotate_limit=(0,0)),
-                                    lambda x,y:  randomHorizontalFlip2(x,y),
+                                    #lambda x,y:  random_horizontal_flip2(x,y),
+                                    #lambda x,y:  random_shift_scale_rotate2(x,y,shift_limit=(-0.0625,0.0625), scale_limit=(-0.1,0.1), rotate_limit=(-0,0)),
                                 ],
-                            is_preload=False,
+                                mode='train'
                          )
 
-    if 1: #check indexing
+    if 0: #check indexing
         for n in range(100):
             image, label, index = dataset[n]
             image = tensor_to_image(image, std=255)
             label = tensor_to_label(label)
 
-            im_show('image', image, resize=1)
-            im_show('label', label, resize=1)
+            im_show('image', image, resize=0.5)
+            im_show('label', label, resize=0.5)
             cv2.waitKey(0)
 
-    if 0: #check iterator
+    if 1: #check iterator
         #sampler = FixedSampler(dataset, ([4]*100))
-        sampler = SequentialSampler(dataset)
+        sampler = FixedSampler(dataset,  list(np.arange(64)+0*16))
+        #sampler = SequentialSampler(dataset)
+        sampler = RandomSamplerWithLength(dataset,20)
         loader  = DataLoader(dataset, batch_size=4, sampler=sampler,  drop_last=False, pin_memory=True)
-
         for epoch in range(100):
             print('epoch=%d -------------------------'%(epoch))
             check_dataset(dataset, loader)
+
 
 
 
@@ -271,6 +207,5 @@ if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
     run_check_dataset()
-
 
     print('\nsucess!')
