@@ -1,6 +1,8 @@
 from common import *
 from dataset.mask import *
 
+import params
+
 
 #CARVANA_DIR = '/root/share/data/kaggle-carvana-cars-2017'
 #CARVANA_DIR = '/media/ssd/data/kaggle-carvana-cars-2017'
@@ -9,8 +11,8 @@ CARVANA_NUM_VIEWS = 16
 CARVANA_HEIGHT = 1280
 CARVANA_WIDTH  = 1918
 
-CARVANA_H = 1024
-CARVANA_W = 1024
+CARVANA_H = params.input_size
+CARVANA_W = params.input_size
 
 #debug and show
 def make_results_image(image, label, prob=None, label_color=2, prob_color=1):

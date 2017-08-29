@@ -1,14 +1,17 @@
+import params
+
 from common import *
 from dataset.carvana_cars import *
 
-from net.tool import *
-from net.rate import *
-from net.segmentation.loss import *
-from net.segmentation.blocks import *
+from model.tool import *
+from model.rate import *
+from model.segmentation.loss import *
+from model.segmentation.blocks import *
 
 #from net.segmentation.my_unet_baseline import UNet512 as Net
-from net.segmentation.my_unet_baseline import UNet1024 as Net
+#from model.segmentation.my_unet_baseline import UNet1024 as Net
 #from net.segmentation.my_unet_baseline import UNet128 as Net
+Net = params.model_factory
 
 
 ## ----------------------------------------------------------------------------------
@@ -211,7 +214,8 @@ def evaluate(net, test_loader):
 # ------------------------------------------------------------------------------------
 def run_train():
 
-    out_dir  = './results' #'/root/share/project/kaggle-carvana-cars/results/single/UNet1024-01c'
+    #out_dir  = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/UNet1024-baseline' #'/root/share/project/kaggle-carvana-cars/results/single/UNet1024-01c'
+    out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     initial_checkpoint = None
         #'/root/share/project/kaggle-carvana-cars/results/single/UNet128-00-xxx/checkpoint/006.pth'
 
@@ -223,7 +227,7 @@ def run_train():
     os.makedirs(out_dir+'/backup', exist_ok=True)
     os.makedirs(out_dir+'/checkpoint', exist_ok=True)
     os.makedirs(out_dir+'/snap', exist_ok=True)
-    #backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/train.code.zip')
+    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/train.code.zip')
 
     log = Logger()
     log.open(out_dir+'/log.train.txt',mode='a')
@@ -259,8 +263,9 @@ def run_train():
 
 
     log.write('** dataset setting **\n')
-    batch_size   =  2
-    num_grad_acc =  32//batch_size
+    #batch_size   =  2
+    batch_size = params.step_batch_size
+    num_grad_acc =  params.real_batch_size//batch_size
 
     train_dataset = KgCarDataset(  'train_v0_4320',
                                    #'train_5088',
@@ -302,7 +307,7 @@ def run_train():
     log.write('** net setting **\n')
 
     #net = Net(in_shape=(3, 128, 128))
-    net = Net(in_shape=(3, 1024, 1024))
+    net = Net(in_shape=(3, params.input_size, params.input_size))
     net.cuda()
 
     log.write('%s\n\n'%(type(net)))
@@ -312,6 +317,7 @@ def run_train():
 
     ## optimiser ----------------------------------
     optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
+    #optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)
 
     num_epoches = 150  #100
     it_print    = 1    #20
