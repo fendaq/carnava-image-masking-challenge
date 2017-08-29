@@ -7,7 +7,7 @@ from dataset.carvana_cars import *
 from model.tool import *
 from model.segment.loss import SoftDiceLoss, BCELoss2d
 
-# rom model.segment.uNet import UNet_double_1024 as Net
+# from model.segment.uNet import UNet_double_1024 as Net
 Net = params.model_factory
 
 ## experiment setting here ----------------------------------------------------

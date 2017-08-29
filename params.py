@@ -1,5 +1,7 @@
 from model.segment.uNet import UNet_double_1024, UNet_double_1024_deconv
 # from model.segment.DeepLabv2 import Deeplab_v2_resnet
+from model.segment.DeepLabv3 import Deeplabv3_parallel
+from model.segment.SegNet import segnet_vgg
 
 input_size = 1024
 

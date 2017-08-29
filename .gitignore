@@ -11,7 +11,9 @@ result/*
 .ipynb_checkpoints/
 
 # Others
+code_bak/
 todo
 *.ods
 test-notebook.ipynb
 注释模板
+*.gz
