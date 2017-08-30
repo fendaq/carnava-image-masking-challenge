@@ -18,8 +18,8 @@ def ListFilesToTxt(dir, file, wildcard, recursion):
 
 def Test():
     # dir= os.getcwd() 
-    dir = "/home/lhc/Projects/Kaggle-seg/data/train"
-    outfile="train_aug.txt"
+    dir = "/Kaggle/kaggle-carvana-cars-2017/images/train"
+    outfile="train_5088"
     wildcard = ".jpg"
     file = open(outfile,"w")
     if not file:

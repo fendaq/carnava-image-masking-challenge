@@ -1,7 +1,7 @@
 # https://www.kaggle.com/vfdev5/data-visualization
 from common import *
 from dataset.carvana_cars import *
-from net.tool import *
+from model.tool import *
 
 def get_model_from_dir():
 
@@ -58,7 +58,8 @@ def split_train_valid_list():
         with open(file,'w') as f:
             for id in ids:
                 for v in range(1,CARVANA_NUM_VIEWS+1):
-                    f.write('train/%s_%02d\n'%(id,v))
+                    #f.write('train/%s_%02d\n'%(id,v))
+                    f.write('%s_%02d\n'%(id,v))
     xx=0
  # if 1:
  #        img_dir  = CARVANA_DIR + '/images/train'
@@ -172,7 +173,10 @@ def run_make_train_backgrounds():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
+    CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
+    #split_train_valid_list()
+    check_lists_overlap()
     #run_make_train_ids()
-    run_make_train_backgrounds()
+    #run_make_train_backgrounds()
 
     print('\nsucess!')

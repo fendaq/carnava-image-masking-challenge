@@ -1,84 +1,14 @@
 # segnet
 # see https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/models/segnet.py
 
+from common import *
+from common import *
+from model.segmentation.blocks import *
+from model.segmentation.loss import *
+
+import torch
 import torch.nn as nn
-
 import torchvision.models as models
-
-class conv2DBatchNormRelu(nn.Module):
-    def __init__(self, in_channels, n_filters, k_size,  stride, padding, bias=True):
-        super(conv2DBatchNormRelu, self).__init__()
-
-        self.cbr_unit = nn.Sequential(nn.Conv2d(int(in_channels), int(n_filters), kernel_size=k_size,
-                                                padding=padding, stride=stride, bias=bias),
-                                 nn.BatchNorm2d(int(n_filters)),
-                                 nn.ReLU(inplace=True),)
-
-    def forward(self, inputs):
-        outputs = self.cbr_unit(inputs)
-        return outputs
-
-class segnetDown2(nn.Module):
-    def __init__(self, in_size, out_size):
-        super(segnetDown2, self).__init__()
-        self.conv1 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
-        self.conv2 = conv2DBatchNormRelu(out_size, out_size, 3, 1, 1)
-        self.maxpool_with_argmax = nn.MaxPool2d(2, 2, return_indices=True)
-
-    def forward(self, inputs):
-        outputs = self.conv1(inputs)
-        outputs = self.conv2(outputs)
-        unpooled_shape = outputs.size()
-        outputs, indices = self.maxpool_with_argmax(outputs)
-        return outputs, indices, unpooled_shape
-
-
-class segnetDown3(nn.Module):
-    def __init__(self, in_size, out_size):
-        super(segnetDown3, self).__init__()
-        self.conv1 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
-        self.conv2 = conv2DBatchNormRelu(out_size, out_size, 3, 1, 1)
-        self.conv3 = conv2DBatchNormRelu(out_size, out_size, 3, 1, 1)
-        self.maxpool_with_argmax = nn.MaxPool2d(2, 2, return_indices=True)
-
-    def forward(self, inputs):
-        outputs = self.conv1(inputs)
-        outputs = self.conv2(outputs)
-        outputs = self.conv3(outputs)
-        unpooled_shape = outputs.size()
-        outputs, indices = self.maxpool_with_argmax(outputs)
-        return outputs, indices, unpooled_shape
-
-
-class segnetUp2(nn.Module):
-    def __init__(self, in_size, out_size):
-        super(segnetUp2, self).__init__()
-        self.unpool = nn.MaxUnpool2d(2, 2)
-        self.conv1 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
-        self.conv2 = conv2DBatchNormRelu(out_size, out_size, 3, 1, 1)
-
-    def forward(self, inputs, indices, output_shape):
-        outputs = self.unpool(input=inputs, indices=indices, output_size=output_shape)
-        outputs = self.conv1(outputs)
-        outputs = self.conv2(outputs)
-        return outputs
-
-
-class segnetUp3(nn.Module):
-    def __init__(self, in_size, out_size):
-        super(segnetUp3, self).__init__()
-        self.unpool = nn.MaxUnpool2d(2, 2)
-        self.conv1 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
-        self.conv2 = conv2DBatchNormRelu(out_size, out_size, 3, 1, 1)
-        self.conv3 = conv2DBatchNormRelu(out_size, out_size, 3, 1, 1)
-
-    def forward(self, inputs, indices, output_shape):
-        outputs = self.unpool(input=inputs, indices=indices, output_size=output_shape)
-        outputs = self.conv1(outputs)
-        outputs = self.conv2(outputs)
-        outputs = self.conv3(outputs)
-        return outputs
-
 
 class segnet(nn.Module):
 
@@ -157,7 +87,7 @@ class segnet(nn.Module):
 
 class segnet_vgg(nn.Module):
 
-    def __init__(self, n_classes):
+    def __init__(self, in_shape, n_classes):
         super(segnet_vgg,self).__init__()
         self.model = segnet(num_classes=n_classes)
 
@@ -167,3 +97,32 @@ class segnet_vgg(nn.Module):
         out = self.model(x)
 
         return out
+
+# main #################################################################
+if __name__ == '__main__':
+    print( '%s: calling main function ... ' % os.path.basename(__file__))
+
+    CARVANA_HEIGHT = 1280
+    CARVANA_WIDTH  = 1918
+    batch_size  = 1
+    C,H,W = 3,256,256    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+
+    if 1: # BCELoss2d()
+        num_classes = 1
+
+        inputs = torch.randn(batch_size,C,H,W)
+        labels = torch.LongTensor(batch_size,H,W).random_(1).type(torch.FloatTensor)
+
+        net = segnet_vgg(in_shape=(C,H,W)).cuda().train()
+        x = Variable(inputs.cuda())
+        y = Variable(labels.cuda())
+        logits = net.forward(x)
+
+        loss = BCELoss2d()(logits, y)
+        loss.backward()
+
+        print(type(net))
+        print(net)
+        print('logits')
+        print(logits)
+    #input('Press ENTER to continue.')
