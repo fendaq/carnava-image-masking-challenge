@@ -18,7 +18,7 @@ Net = params.model_factory
 #  ffmpeg -y -loglevel 0 -f image2 -r 15 -i 'xxxxx/%*.jpg' -b:v 8000k xxxxx.avi
 #  ffmpeg -i results.avi -vf scale=300:100 -b:v 8000k results-small.avi
 
-CSV_BLOCK_SIZE = 16000
+CSV_BLOCK_SIZE = 10000
 
 
 
@@ -324,8 +324,8 @@ def run_train():
     it_smooth   = 20
     epoch_valid = list(range(0,num_epoches+1))
     epoch_save  = list(range(0,num_epoches+1))
-    LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (42, -1),(44, -1)])
-    #LR = StepLR([ (0, 0.01),  (40, 0.005),  (45,0.001),  (47, -1),(44, -1)])
+    #LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (42, -1),(44, -1)])
+    LR = StepLR([ (0, 0.01),  (30, 0.005),  (40,0.001),  (45, 0.0005),(55, -1)])
     #LR = StepLR([ (0, 0.01),])
     #LR = StepLR([ (0, 0.005),])
 
@@ -609,7 +609,8 @@ def run_submit1():
 
     is_merge_bn = 1
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-00d'
-    out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     model_file = out_dir +'/snap/092.pth'  #final
 
     #logging, etc --------------------
@@ -627,7 +628,7 @@ def run_submit1():
     log.write('** dataset setting **\n')
     batch_size = 4
 
-    test_dataset = KgCarDataset( 'test_100064',  'test1024x1024',#100064  #3197
+    test_dataset = KgCarDataset( 'test_100064',  'test',#100064  #3197
                                  #'valid_v0_768',  'train1024x1024',#100064  #3197
                                      transform= [
                                     ],mode='test')
@@ -667,7 +668,8 @@ def run_submit1():
 def run_submit2():
 
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00c'
-    out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)

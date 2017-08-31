@@ -30,6 +30,14 @@ class segnet(nn.Module):
         self.up2 = segnetUp2(128, 64)
         self.up1 = segnetUp2(64, num_classes)
 
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
     def forward(self, inputs):
 
         down1, indices_1, unpool_shape1 = self.down1(inputs)
@@ -87,13 +95,15 @@ class segnet(nn.Module):
 
 class segnet_vgg(nn.Module):
 
-    def __init__(self, in_shape, n_classes):
+    def __init__(self, in_shape, n_classes = 1):
         super(segnet_vgg,self).__init__()
         self.model = segnet(num_classes=n_classes)
+        #vgg16 = models.VGG(models.vgg.make_layers(models.vgg.cfg['D']))
+        #vgg16.load_state_dict(torch.load('/home/lhc/.torch/models/vgg16-397923af.pth'))
+        #vgg16 = models.vgg16(pretrained=True)
+        #self.model.init_vgg16_params(vgg16)
 
     def forward(self, x):
-        vgg16 = models.vgg16(pretrained=True)
-        self.model.init_vgg16_params(vgg16)
         out = self.model(x)
 
         return out
@@ -105,7 +115,7 @@ if __name__ == '__main__':
     CARVANA_HEIGHT = 1280
     CARVANA_WIDTH  = 1918
     batch_size  = 1
-    C,H,W = 3,256,256    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
 
     if 1: # BCELoss2d()
         num_classes = 1

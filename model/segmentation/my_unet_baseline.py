@@ -46,13 +46,13 @@ class UNet1024 (nn.Module):
 
         out = x                       #;print('x    ',x.size())
                                       #
-        down1,out = self.down1(out)  ;print('down1',down1.size())  #256
-        down2,out = self.down2(out)   ;print('down2',down2.size())  #128
-        down3,out = self.down3(out)   ;print('down3',down3.size())  #64
-        down4,out = self.down4(out)   ;print('down4',down4.size())  #32
-        down5,out = self.down5(out)   ;print('down5',down5.size())  #16
-        down6,out = self.down6(out)   ;print('down6',down6.size())  #8
-        pass                          ;print('out  ',out.size())
+        down1,out = self.down1(out)  #;print('down1',down1.size())  #256
+        down2,out = self.down2(out)   #;print('down2',down2.size())  #128
+        down3,out = self.down3(out)   #;print('down3',down3.size())  #64
+        down4,out = self.down4(out)   #;print('down4',down4.size())  #32
+        down5,out = self.down5(out)   #;print('down5',down5.size())  #16
+        down6,out = self.down6(out)   #;print('down6',down6.size())  #8
+        #pass                          #;print('out  ',out.size())
 
         out = self.center(out)
         out = self.up6(down6, out)
@@ -225,8 +225,8 @@ if __name__ == '__main__':
 
     CARVANA_HEIGHT = 1280
     CARVANA_WIDTH  = 1918
-    batch_size  = 1
-    C,H,W = 3,256,256    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    batch_size  = 2
+    C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
 
     if 1: # BCELoss2d()
         num_classes = 1
@@ -243,7 +243,7 @@ if __name__ == '__main__':
         loss.backward()
 
         print(type(net))
-        print(net)
+        #print(net)
         print('logits')
         print(logits)
     #input('Press ENTER to continue.')

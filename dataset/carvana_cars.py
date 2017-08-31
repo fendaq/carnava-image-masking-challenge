@@ -82,8 +82,8 @@ class KgCarDataset(Dataset):
         id     = name[:-3]
         view   = int(name[-2:])-1
 
-        #img_file = CARVANA_DIR + '/images/%s/%s.jpg'%(folder,name)
-        img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
+        img_file = CARVANA_DIR + '/images/%s/%s.jpg'%(folder,name)
+        #img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
         #print(img_file)
         img   = cv2.imread(img_file)
         img = cv2.resize(img,(CARVANA_W,CARVANA_H))
@@ -96,8 +96,8 @@ class KgCarDataset(Dataset):
 
         #mask_file = CARVANA_DIR + '/annotations/%s/%s_mask.png'%(folder,name)
         if 'test' in folder: mask_file = CARVANA_DIR + '/priors/%s/%s.png'%(folder,name)
-        #else:                mask_file = CARVANA_DIR + '/annotations/%s/%s_mask.png'%(folder,name)
-        else:                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
+        else:                mask_file = CARVANA_DIR + '/annotations/%s/%s_mask.png'%(folder,name)
+        #else:                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
 
         mask = cv2.imread(mask_file,cv2.IMREAD_GRAYSCALE)
         mask = cv2.resize(mask,(CARVANA_W,CARVANA_H))
