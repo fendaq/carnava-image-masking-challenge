@@ -69,7 +69,7 @@ class ConvBnRelu2d(nn.Module):
 
 
 
-class ConvResidual (nn.Module):
+class ConvResidual (nn.Module):  #basicblock结构
     def __init__(self, in_channels, out_channels, stride=1):
         super(ConvResidual, self).__init__()
 
@@ -88,7 +88,8 @@ class ConvResidual (nn.Module):
         return x
 
 
-
+class BottleNeck (nn.Module):
+    pass
 ## -----------------------------------------------------------------------------------------------------------
 
 ## origainl 3x3 stack filters used in UNet
@@ -240,11 +241,72 @@ class segnetUp3(nn.Module):
 
 
 ## for Large kernel matters
+#https://github.com/ycszen/pytorch-ss/blob/master/gcn.py
+class GCN(nn.Module):
+    def __init__(self, inplanes, planes, ks=7):
+        super(GCN, self).__init__()
+        self.conv_l1 = nn.Conv2d(inplanes, planes, kernel_size=(ks, 1),
+                                 padding=(ks//2, 0))
 
+        self.conv_l2 = nn.Conv2d(planes, planes, kernel_size=(1, ks),
+                                 padding=(0, ks//2))
+        self.conv_r1 = nn.Conv2d(inplanes, planes, kernel_size=(1, ks),
+                                 padding=(0, ks//2))
+        self.conv_r2 = nn.Conv2d(planes, planes, kernel_size=(ks, 1),
+                                 padding=(ks//2, 0))
+
+    def forward(self, x):
+        x_l = self.conv_l1(x)
+        x_l = self.conv_l2(x_l)
+
+        x_r = self.conv_r1(x)
+        x_r = self.conv_r2(x_r)
+
+        x = x_l + x_r
+
+        return x
 ##---------------------------------------------------------------
 
+## for boundary refine
+class Refine(nn.Module):
+    def __init__(self,planes):
+        super(Refine, self).__init__()
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
+
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
+
+    def forward(self,x):
+        out = self.bn1(x)
+        out = self.relu(out)
+        out = self.conv1(out)
+
+        out = self.bn2(out)
+        out = self.relu(out)
+        out = self.conv2(out)
+
+        #print(x.size())
+        #print(out.size())
+
+        out += x
+
+        return out
+
+## -----------------------------------------------------------------------------------------------------------
 
 ## for SPP
+
+
+## -----------------------------------------------------------------------------------------------------------
+
+## for identity mapping resnet
+
+## -----------------------------------------------------------------------------------------------------------
+
+## for wide resnet,dropout
 
 ## -----------------------------------------------------------------------------------------------------------
 

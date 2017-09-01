@@ -1,5 +1,6 @@
 # segnet
 # see https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/models/segnet.py
+#     https://github.com/bodokaiser/piwise/blob/master/piwise/network.py
 
 from common import *
 from common import *
