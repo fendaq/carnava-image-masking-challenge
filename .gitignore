@@ -4,6 +4,9 @@
 # VScode
 .vscode
 
+# pycharm
+.idea/
+
 # Result
 result/*
 
