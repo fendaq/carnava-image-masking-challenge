@@ -149,11 +149,11 @@ def check_dataset(dataset, loader, wait=0):
                 label = tensor_to_label(label)
 
                 results = make_results_image(image, label, prob=None)
-                im_show('results', results, resize=0.5)
+                #im_show('results', results, resize=0.5)
 
                 #im_show('image', image, resize=1)
                 #im_show('label', label, resize=1)
-                cv2.waitKey(wait)
+                #cv2.waitKey(wait)
 
     if dataset.mode=='test':
         for i, (images, indices) in enumerate(loader, 0):
@@ -164,8 +164,8 @@ def check_dataset(dataset, loader, wait=0):
                 image = images[n]
                 image = tensor_to_image(image, std=255)
 
-                im_show('image', image, resize=0.5)
-                cv2.waitKey(wait)
+                #im_show('image', image, resize=0.5)
+                #cv2.waitKey(wait)
 
 
 
