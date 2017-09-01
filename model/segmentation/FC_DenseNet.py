@@ -197,12 +197,12 @@ class FCDenseNet(nn.Module):
         
         return out
 
-def FCDenseNet57(n_classes):
+def FCDenseNet57(in_shape, n_classes=1):
     return FCDenseNet(in_channels=3, down_blocks=(4, 4, 4, 4, 4), 
                  up_blocks=(4, 4, 4, 4, 4), bottleneck_layers=4, 
                  growth_rate=12, out_chans_first_conv=48, n_classes=n_classes)
 
-def FCDenseNet67(n_classes):
+def FCDenseNet67(in_shape, n_classes=1):
     return FCDenseNet(in_channels=3, down_blocks=(5, 5, 5, 5, 5), 
                  up_blocks=(5, 5, 5, 5, 5), bottleneck_layers=5, 
                  growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
@@ -212,6 +212,11 @@ def FCDenseNet103(in_shape, n_classes=1):
                  up_blocks=(12,10,7,5,4), bottleneck_layers=15, 
                  growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
 
+def my_FCDenseNet(in_shape, n_classes=1):
+    return FCDenseNet(in_channels=3, down_blocks=(4, 4, 4, 4, 4), 
+                 up_blocks=(4, 4, 4, 4, 4), bottleneck_layers=6, 
+                 growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
+
 # main #################################################################
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
@@ -219,7 +224,7 @@ if __name__ == '__main__':
     CARVANA_HEIGHT = 1280
     CARVANA_WIDTH  = 1918
     batch_size  = 2
-    C,H,W = 3,256,256    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    C,H,W = 3,512,512    #3,CARVANA_HEIGHT,CARVANA_WIDTH
 
     if 1: # BCELoss2d()
         num_classes = 1
@@ -227,7 +232,9 @@ if __name__ == '__main__':
         inputs = torch.randn(batch_size,C,H,W)
         labels = torch.LongTensor(batch_size,H,W).random_(1).type(torch.FloatTensor)
 
-        net = FCDenseNet103(in_shape=(C,H,W)).cuda().train()
+        #net = FCDenseNet103(in_shape=(C,H,W)).cuda().train()
+        #net = FCDenseNet67(in_shape=(C,H,W)).cuda().train()
+        net = my_FCDenseNet(in_shape=(C,H,W)).cuda().train()
         print(type(net))
         print(net)
 
