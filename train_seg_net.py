@@ -214,9 +214,9 @@ def evaluate(net, test_loader):
 # ------------------------------------------------------------------------------------
 def run_train():
 
-    #out_dir  = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/UNet1024-baseline' #'/root/share/project/kaggle-carvana-cars/results/single/UNet1024-01c'
-    #out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-    out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
+    out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    #out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
+    
     initial_checkpoint = None
         #'/root/share/project/kaggle-carvana-cars/results/single/UNet128-00-xxx/checkpoint/006.pth'
 
