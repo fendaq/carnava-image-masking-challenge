@@ -4,8 +4,11 @@ from dataset.mask import *
 import params
 
 
-CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
-#CARVANA_DIR = '/kaggle_data_results/Kaggle/kaggle-carvana-cars-2017'
+if params.my_computer:
+    CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
+else:
+    CARVANA_DIR = '/kaggle_data_results/Kaggle/kaggle-carvana-cars-2017'
+
 CARVANA_NUM_VIEWS = 16
 CARVANA_HEIGHT = 1280
 CARVANA_WIDTH  = 1918
