@@ -195,7 +195,7 @@ def evaluate(net, test_loader):
         probs  = F.sigmoid(logits)
         masks  = (probs>0.5).float()
 
-        loss = criterion(logits, labels)
+        loss = criterion(logits, labels, is_weight=True)
         acc  = dice_loss(masks, labels)
 
         batch_size = len(indices)
@@ -279,7 +279,7 @@ def run_train():
                         sampler = RandomSamplerWithLength(train_dataset,4320),
                         batch_size  = batch_size,
                         drop_last   = True,
-                        num_workers = 8,
+                        num_workers = 4,
                         pin_memory  = True)
     ##check_dataset(train_dataset, train_loader), exit(0)
 
@@ -292,7 +292,7 @@ def run_train():
                         sampler = SequentialSampler(valid_dataset),
                         batch_size  = batch_size,
                         drop_last   = False,
-                        num_workers = 6,
+                        num_workers = 4,
                         pin_memory  = True)
 
 
@@ -325,7 +325,7 @@ def run_train():
     epoch_valid = list(range(0,num_epoches+1))
     epoch_save  = list(range(0,num_epoches+1))
     #LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (42, -1),(44, -1)])
-    LR = StepLR([ (0, 0.01),  (30, 0.005),  (40,0.001),  (45, 0.0005),(55, -1)])
+    LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (45, 0.0002),(55, -1)])
     #LR = StepLR([ (0, 0.01),])
     #LR = StepLR([ (0, 0.005),])
 
@@ -345,6 +345,7 @@ def run_train():
     #training ####################################################################3
     log.write('** start training here! **\n')
     log.write(' num_grad_acc x batch_size = %d x %d=%d\n'%(num_grad_acc,batch_size,num_grad_acc*batch_size))
+    log.write('input_size = %d x %d\n'%(params.input_size,params.input_size) )
     log.write(' optimizer=%s\n'%str(optimizer) )
     log.write(' LR=%s\n\n'%str(LR) )
     log.write('\n')
@@ -413,7 +414,7 @@ def run_train():
             probs  = F.sigmoid(logits)
             masks  = (probs>0.5).float()
 
-            loss = criterion(logits, labels)
+            loss = criterion(logits, labels, is_weight=True)
             acc  = dice_loss(masks, labels)
 
             # optimizer.zero_grad()
