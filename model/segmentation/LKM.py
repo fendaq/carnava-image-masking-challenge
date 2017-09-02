@@ -6,15 +6,22 @@ from model.segmentation.blocks import *
 import torch.nn as nn
 import torchvision.models as models
 
-class LKM(nn.Module):
-    def __init__(self, in_shape, num_classes=1):
+class LKM(nn.Module): 
+    def __init__(self, in_shape, num_classes=1, resnet=152):
         super(LKM, self).__init__()
 
         self.num_classes = num_classes
 
-        #resnet = models.resnet50(pretrained=True)
-        resnet = models.ResNet(models.resnet.Bottleneck, [3, 4, 6, 3])
-        resnet.load_state_dict(torch.load('/home/lhc/.torch/models/resnet50-19c8e357.pth'))
+        if resnet == 50:
+            #resnet = models.resnet50(pretrained=True)
+            resnet = models.ResNet(models.resnet.Bottleneck, [3, 4, 6, 3])
+            resnet.load_state_dict(torch.load('/home/lhc/.torch/models/resnet50-19c8e357.pth'))
+        elif resnet ==101:  
+            resnet = models.ResNet(models.resnet.Bottleneck, [3, 4, 23, 3])
+            resnet.load_state_dict(torch.load('/home/lhc/.torch/models/resnet101-5d3b4d8f.pth'))
+        elif resnet ==152:  
+            resnet = models.ResNet(models.resnet.Bottleneck, [3, 8, 36, 3])
+            resnet.load_state_dict(torch.load('/home/lhc/.torch/models/resnet152-b121ed2d.pth'))
 
 
         self.conv1 = resnet.conv1
