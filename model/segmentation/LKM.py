@@ -122,7 +122,7 @@ if __name__ == '__main__':
     CARVANA_HEIGHT = 1280
     CARVANA_WIDTH  = 1918
     batch_size  = 2
-    C,H,W = 3,512,512    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
 
     if 1: # BCELoss2d()
         num_classes = 1

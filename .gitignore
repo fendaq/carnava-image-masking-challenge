@@ -14,8 +14,6 @@ result/*
 .ipynb_checkpoints/
 
 # Others
-params.py
-
 code_bak/
 todo
 *.ods
