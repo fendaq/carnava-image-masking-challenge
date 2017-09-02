@@ -53,7 +53,9 @@ class segnet(nn.Module):
         up2 = self.up2(up3, indices_2, unpool_shape2)
         up1 = self.up1(up2, indices_1, unpool_shape1)
 
-        return up1
+        out = torch.squeeze(up1, dim=1)
+
+        return out
 
 
     def init_vgg16_params(self, vgg16):
@@ -115,7 +117,7 @@ if __name__ == '__main__':
 
     CARVANA_HEIGHT = 1280
     CARVANA_WIDTH  = 1918
-    batch_size  = 1
+    batch_size  = 2
     C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
 
     if 1: # BCELoss2d()
@@ -136,4 +138,5 @@ if __name__ == '__main__':
         print(net)
         print('logits')
         print(logits)
+        print(logits.size())
     #input('Press ENTER to continue.')

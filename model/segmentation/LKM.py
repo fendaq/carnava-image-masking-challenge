@@ -111,6 +111,8 @@ class LKM(nn.Module):
                 print(fm1.size(),fm2.size(),fm3.size(),fm4.size())
                 print(fs1.size(),fs2.size(),fs3.size(),fs4.size())
 
+        out = torch.squeeze(out, dim=1)
+
         return out #, fs4, fs3, fs2, fs1, gcfm1
 
 # main #################################################################

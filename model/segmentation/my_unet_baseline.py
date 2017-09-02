@@ -225,7 +225,7 @@ if __name__ == '__main__':
 
     CARVANA_HEIGHT = 1280
     CARVANA_WIDTH  = 1918
-    batch_size  = 2
+    batch_size  = 3
     C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
 
     if 1: # BCELoss2d()
@@ -246,6 +246,7 @@ if __name__ == '__main__':
         #print(net)
         print('logits')
         print(logits)
+        print(logits.size())
     #input('Press ENTER to continue.')
 
 

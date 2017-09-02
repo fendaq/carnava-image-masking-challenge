@@ -193,7 +193,7 @@ class FCDenseNet(nn.Module):
             print("after up", out.size(), skip.size())  
 
         out = self.finalConv(out)
-
+        out = torch.squeeze(out, dim=1)
         
         return out
 
