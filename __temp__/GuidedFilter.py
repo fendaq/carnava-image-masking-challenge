@@ -13,6 +13,7 @@ Net = params.model_factory
 
 CSV_BLOCK_SIZE = 10000
 # test guided filter matting
+# 总结 传统算法仍然局限，这个问题看似简单，但在边缘情况还是比较复杂，考虑采用神经网络
 
 
 def run_valid():
@@ -50,7 +51,7 @@ def run_valid():
     log.write('\n')
 
 
-    batch_size   =  4
+    batch_size   =  12
     valid_dataset = KgCarDataset(
                                 #'train_160', 'train512x512',
                                 #'train_v0_4320', 'train512x512',
@@ -62,7 +63,7 @@ def run_valid():
                         sampler = SequentialSampler(valid_dataset),
                         batch_size  = batch_size,
                         drop_last   = False,
-                        num_workers = 6,
+                        num_workers = 8,
                         pin_memory  = True)
     ##check_dataset(valid_dataset, valid_loader), exit(0)
 
@@ -120,16 +121,20 @@ def run_valid():
             prob = cv2.resize(prob,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)  #INTER_CUBIC  ##
             
             #test-------------
-            print(prob.shape)
+            #print(prob.shape)
             #-----------------
             #----------------insert guided filter--------------------
             guide_file = CARVANA_DIR + '/images/%s/%s.jpg'%('train',name)
             guide = cv2.imread(guide_file)
-            out_prob = cv2.ximgproc.guidedFilter(guide, prob, radius=60, eps=10e-6)
+            out_prob = cv2.ximgproc.guidedFilter(guide, prob, radius=1, eps=1e-7)
+
+            prob = out_prob
+
+            threshold = 127*0.8
             #--------------------------------------------------------
             
 
-            score = one_dice_loss_py(prob>127, label>127)
+            score = one_dice_loss_py(prob>threshold, label>127)
             full_accs   [start+b] = score
             full_indices[start+b] = indices[b]
 
@@ -140,9 +145,9 @@ def run_valid():
                 draw_shadow_text  (results, '%s.jpg'%(name), (5,30),  1, (255,255,255), 2)
                 draw_shadow_text  (results, description, (5,60),  1, (255,255,255), 2)
 
-                print('full : %0.6f'%score)
-                im_show('results',results,0.33)
-                cv2.waitKey(1)
+                #print('full : %0.6f'%score)
+                #im_show('results',results,0.33)
+                #cv2.waitKey(1)
 
                 cv2.imwrite(out_dir+'/valid/full_results_by_score/%0.5f-%s.png'%(score,name), results)
                 cv2.imwrite(out_dir+'/valid/full_results_by_name/%s.png'%(name), results)
