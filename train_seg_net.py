@@ -34,6 +34,7 @@ def criterion(logits, labels, is_weight=True):
     elif H == 256:  kernel_size =21
     elif H == 512:  kernel_size =21
     elif H == 1024: kernel_size =41 #41
+    elif H == 1280: kernel_size =51 #41
     else: raise ValueError('exit at criterion()')
 
     a   = F.avg_pool2d(labels,kernel_size=kernel_size,padding=kernel_size//2,stride=1)
