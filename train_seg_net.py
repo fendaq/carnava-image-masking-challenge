@@ -101,8 +101,8 @@ def show_batch_results(indices, images, probs, labels=None, wait=1,
             if mode in['both','by_score'] : cv2.imwrite(out_dir+'/results_by_score/%0.5f-%s.png'%(score,name), results)
             if mode in['both','by_name' ] : cv2.imwrite(out_dir+'/results_by_name/%s.png'%(name), results)
 
-        im_show('train',  results,  resize=1)
-        cv2.waitKey(wait)
+        #im_show('train',  results,  resize=1)
+        #cv2.waitKey(wait)
 
 
 
@@ -475,10 +475,14 @@ def run_train():
 
 def run_valid():
 
-    out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
     #out_dir    = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00'
     #out_dir    = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00c'
     #out_dir    = '/root/share/project/kaggle-carvana-cars/results/__old_4__/UNet1024-shallow-01b'
+    if params.my_computer:
+        out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    else:
+        out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
     model_file = out_dir +'/snap/final.pth'  #final
 
     is_results      = True
@@ -508,7 +512,7 @@ def run_valid():
     valid_dataset = KgCarDataset(
                                 #'train_160', 'train512x512',
                                 #'train_v0_4320', 'train512x512',
-                                'valid_v0_768',   'train1024x1024', #'train1024x1024',
+                                'valid_v0_768',   'train', #'train1024x1024',
                                 transform=[
                                 ])
     valid_loader  = DataLoader(
@@ -615,7 +619,10 @@ def run_submit1():
     is_merge_bn = 1
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-00d'
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
-    out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    if params.my_computer:
+        out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    else:
+        out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
     model_file = out_dir +'/snap/092.pth'  #final
 
     #logging, etc --------------------
@@ -674,8 +681,10 @@ def run_submit2():
 
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00c'
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
-    out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-
+    if params.my_computer:
+        out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    else:
+        out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)
     backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')

@@ -88,7 +88,8 @@ class KgCarDataset(Dataset):
         #img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
         #print(img_file)
         img   = cv2.imread(img_file)
-        img = cv2.resize(img,(CARVANA_W,CARVANA_H))
+        if params.post_prosses != True:
+            img = cv2.resize(img,(CARVANA_W,CARVANA_H))
         image = img.astype(np.float32)/255
         return image
 
@@ -102,7 +103,8 @@ class KgCarDataset(Dataset):
         #else:                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
 
         mask = cv2.imread(mask_file,cv2.IMREAD_GRAYSCALE)
-        mask = cv2.resize(mask,(CARVANA_W,CARVANA_H))
+        if params.post_prosses != True:
+            mask = cv2.resize(mask,(CARVANA_W,CARVANA_H))
         label = mask.astype(np.float32)/255
         return label
 

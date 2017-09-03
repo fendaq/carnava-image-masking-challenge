@@ -1,15 +1,30 @@
-from train_seg_net import *
-#from dataset.carvana_cars import *
-#import os
-#import cv2
-#from model.tool import *
+import params
+
+from common import *
+from dataset.carvana_cars import *
+from train_seg_net import show_batch_results
+
+from model.tool import *
+from model.rate import *
+from model.segmentation.loss import *
+from model.segmentation.blocks import *
+
+Net = params.model_factory
+
+CSV_BLOCK_SIZE = 10000
+# test guided filter matting
+
 
 def run_valid():
 
-    out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
     #out_dir    = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00'
     #out_dir    = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00c'
     #out_dir    = '/root/share/project/kaggle-carvana-cars/results/__old_4__/UNet1024-shallow-01b'
+    if params.my_computer:
+        out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    else:
+        out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
     model_file = out_dir +'/snap/final.pth'  #final
 
     is_results      = True
@@ -35,11 +50,11 @@ def run_valid():
     log.write('\n')
 
 
-    batch_size   =  8
+    batch_size   =  4
     valid_dataset = KgCarDataset(
                                 #'train_160', 'train512x512',
                                 #'train_v0_4320', 'train512x512',
-                                'valid_v0_768',   'train1024x1024', #'train1024x1024',
+                                'valid_v0_768',   'train', #'train1024x1024',
                                 transform=[
                                 ])
     valid_loader  = DataLoader(
@@ -103,6 +118,16 @@ def run_valid():
 
             prob = probs[b]
             prob = cv2.resize(prob,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)  #INTER_CUBIC  ##
+            
+            #test-------------
+            print(prob.shape)
+            #-----------------
+            #----------------insert guided filter--------------------
+            guide_file = CARVANA_DIR + '/images/%s/%s.jpg'%('train',name)
+            guide = cv2.imread(guide_file)
+            out_prob = cv2.ximgproc.guidedFilter(guide, prob, radius=60, eps=10e-6)
+            #--------------------------------------------------------
+            
 
             score = one_dice_loss_py(prob>127, label>127)
             full_accs   [start+b] = score
@@ -191,15 +216,11 @@ def run_guided_filter():
             p=ps[m]
             ind=inds[m]
 
-            #test-------------
-            print(prob.size())
-            #-----------------
+            
 
             prob = cv2.resize(p,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)
             mask = prob>127
-            #----------------insert guided filter--------------------
-            cv2.ximgproc.guidedFilter(guide, mask, out_mask, radius, eps)
-            #--------------------------------------------------------
+            
             rle  = run_length_encode(mask)
             rles.append(rle)
 
@@ -235,9 +256,8 @@ def run_guided_filter():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    run_train()
     #run_submit1()
     #run_submit2()
 
-    #run_valid()
+    run_valid()
     print('\nsucess!')
