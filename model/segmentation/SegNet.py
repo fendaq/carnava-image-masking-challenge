@@ -103,7 +103,7 @@ class segnet_vgg(nn.Module):
         self.model = segnet(num_classes=n_classes)
         #vgg16 = models.VGG(models.vgg.make_layers(models.vgg.cfg['D']))
         #vgg16.load_state_dict(torch.load('/home/lhc/.torch/models/vgg16-397923af.pth'))
-        #vgg16 = models.vgg16(pretrained=True)
+            #vgg16 = models.vgg16(pretrained=True)
         #self.model.init_vgg16_params(vgg16)
 
     def forward(self, x):
