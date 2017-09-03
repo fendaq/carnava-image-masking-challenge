@@ -124,17 +124,17 @@ def run_valid():
             #print(prob.shape)
             #-----------------
             #----------------insert guided filter--------------------
-            guide_file = CARVANA_DIR + '/images/%s/%s.jpg'%('train',name)
-            guide = cv2.imread(guide_file)
-            out_prob = cv2.ximgproc.guidedFilter(guide, prob, radius=1, eps=1e-7)
+            # guide_file = CARVANA_DIR + '/images/%s/%s.jpg'%('train',name)
+            # guide = cv2.imread(guide_file)
+            # out_prob = cv2.ximgproc.guidedFilter(guide, prob, radius=1, eps=1e-7)
 
-            prob = out_prob
+            #prob = out_prob
 
-            threshold = 127*0.8
+            # threshold = 127*0.8
             #--------------------------------------------------------
             
 
-            score = one_dice_loss_py(prob>threshold, label>127)
+            score = one_dice_loss_py(prob>127, label>127)
             full_accs   [start+b] = score
             full_indices[start+b] = indices[b]
 
