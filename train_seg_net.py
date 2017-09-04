@@ -320,9 +320,11 @@ def run_train():
     log.write('%s\n\n'%(inspect.getsource(net.forward )))
 
     ## optimiser ----------------------------------
-    #optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
+    if params.optimer == 'SGD':
+        optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
     #optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)
-    optimizer = optim.adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
+    if params.optimer == 'Adam':
+        optimizer = optim.adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
                  weight_decay=0)
 
     num_epoches = 150  #100
@@ -331,7 +333,10 @@ def run_train():
     epoch_valid = list(range(0,num_epoches+1))
     epoch_save  = list(range(0,num_epoches+1))
     #LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (42, -1),(44, -1)])
-    LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (45, 0.0002),(55, -1)])
+    if params.optimer == 'SGD':
+        LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (45, 0.0002),(55, -1)])
+    if params.optimer == 'Adam':
+        LR = StepLR([ (0, 0.001),  (35, 0.0005),  (55, -1)])
     #LR = StepLR([ (0, 0.01),])
     #LR = StepLR([ (0, 0.005),])
 

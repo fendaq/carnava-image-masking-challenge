@@ -11,6 +11,9 @@ input_size = 512
 
 max_epochs = 60
 
+#optimer = 'SGD'
+optimer = 'Adam'
+
 real_batch_size = 16
 step_batch_size = 2
 
