@@ -1,7 +1,7 @@
 from common import *
 from submit import *
 from dataset.carvana_cars import *
-from net.tool import *
+from model.tool import *
 
 def run_vote():
 

@@ -630,7 +630,7 @@ def run_submit1():
         out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     else:
         out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
-    model_file = out_dir +'/snap/092.pth'  #final
+    model_file = out_dir +'/snap/047.pth'  #final
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)
@@ -743,6 +743,7 @@ def run_submit2():
 
             #debug
             #if 0:
+            '''
             if m<10 and i==0:
                 name = names[ind]
                 img_file = CARVANA_DIR + '/images/test/%s.jpg'%(name)
@@ -753,6 +754,7 @@ def run_submit2():
                 im_show('prob',prob,0.33)
                 im_show('p',p,0.33)
                 cv2.waitKey(1)
+            '''
 
     #-----------------------------------------------------
     start = timer()

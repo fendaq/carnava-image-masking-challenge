@@ -266,6 +266,65 @@ class GCN(nn.Module):
 
         return x
 ##---------------------------------------------------------------
+# see paper figure 4.
+class resnet_GCN(nn.Module):
+    def __init__(self, inplanes, GCN_planes, outplanes, ks=7):
+        super(resnet_GCN, self).__init__()
+        # 先设定planes 是4倍gcn_planes
+        self.conv_l1 = nn.Conv2d(inplanes, GCN_planes, kernel_size=(ks, 1),
+                                 padding=(ks//2, 0))
+        self.bn_l1 = nn.BatchNorm2d(GCN_planes)
+        self.conv_l2 = nn.Conv2d(GCN_planes, GCN_planes, kernel_size=(1, ks),
+                                 padding=(0, ks//2))
+        self.bn_l2 = nn.BatchNorm2d(GCN_planes)
+        self.conv_r1 = nn.Conv2d(inplanes, GCN_planes, kernel_size=(1, ks),
+                                 padding=(0, ks//2))
+        self.bn_r1 = nn.BatchNorm2d(GCN_planes)
+        self.conv_r2 = nn.Conv2d(GCN_planes, GCN_planes, kernel_size=(ks, 1),
+                                 padding=(ks//2, 0))
+        self.bn_r2 = nn.BatchNorm2d(GCN_planes)
+
+        self.conv_sum = nn.Conv2d(GCN_planes, outplanes, kernel_size=1)
+        self.bn_sum = nn.BatchNorm2d(outplanes)
+
+        self.relu = nn.ReLU(inplace=True)
+
+        self.shortcut = None
+        if inplanes != outplanes:
+            self.shortcut = nn.Conv2d(inplanes, outplanes, kernel_size=1)
+    
+    def forward(self, x):
+        residual = x
+
+        x_l = self.conv_l1(x)
+        x_l = self.bn_l1(x_l)
+        x_l = self.relu(x_l)
+
+        x_l = self.conv_l2(x_l)
+        x_l = self.bn_l2(x_l)
+        x_l = self.relu(x_l)
+
+        x_r = self.conv_r1(x)
+        x_r = self.bn_r1(x_r)
+        x_r = self.relu(x_r)
+
+        x_r = self.conv_r2(x_r)
+        x_r = self.bn_r2(x_r)
+        x_r = self.relu(x_r)
+
+        out = x_l + x_r
+
+        out = self.conv_sum(out)
+        out = self.bn_sum(out)
+
+        if self.shortcut is not None:
+            residual = self.shortcut(x)
+
+        out += residual
+        out = self.relu(out)
+
+        return out
+##---------------------------------------------------------------
 
 ## for boundary refine
 class Refine(nn.Module):
