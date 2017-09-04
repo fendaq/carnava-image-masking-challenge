@@ -588,9 +588,9 @@ def run_valid():
                 draw_shadow_text  (results, '%s.jpg'%(name), (5,30),  1, (255,255,255), 2)
                 draw_shadow_text  (results, description, (5,60),  1, (255,255,255), 2)
 
-                print('full : %0.6f'%score)
-                im_show('results',results,0.33)
-                cv2.waitKey(1)
+                #print('full : %0.6f'%score)
+                #im_show('results',results,0.33)
+                #cv2.waitKey(1)
 
                 cv2.imwrite(out_dir+'/valid/full_results_by_score/%0.5f-%s.png'%(score,name), results)
                 cv2.imwrite(out_dir+'/valid/full_results_by_name/%s.png'%(name), results)
@@ -765,9 +765,20 @@ def run_submit2():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    run_train()
-    #run_submit1()
-    #run_submit2()
+    opts, args = getopt.getopt(sys.argv[1:], 'tv', ['s1','s2'])
+    
+    for opt, val in opts: 
+        print(opt)
+    
+    if opt == '-t':
+        run_train()
+    elif opt =='-v':  
+        run_valid()
+    elif opt =='--s1':
+        run_submit1()
+    elif opt =='--s2':
+        run_submit2()
+    else:
+        print('nothing,stop')
 
-    #run_valid()
     print('\nsucess!')
