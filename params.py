@@ -2,7 +2,7 @@ from model.segmentation.SegNet import segnet_vgg
 from model.segmentation.my_unet_baseline import UNet1024
 from model.segmentation.unet_variant import UNet1024_64in,UNet1024_LKM
 from model.segmentation.LKM import LKM
-from model.segmentation.FC_DenseNet import my_FCDenseNet
+from model.segmentation.FC_DenseNet import my_FCDenseNet02,my_FCDenseNet,FCDenseNet103
 
 my_computer  = True
 
@@ -11,8 +11,8 @@ input_size = 512
 
 max_epochs = 60
 
-real_batch_size = 15
-step_batch_size = 5
+real_batch_size = 16
+step_batch_size = 2
 
 
 #test_batch_size = 8
@@ -22,7 +22,7 @@ orig_height = 1280
 
 # threshold = 0.5
 
-model_factory = segnet_vgg;   save_path = 'test'
+model_factory = my_FCDenseNet02;   save_path = 'test'
 
 #single model train
 #model_factory = UNet1024;   save_path = 'unet_double_1024_baseline'
