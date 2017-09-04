@@ -324,7 +324,7 @@ def run_train():
         optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
     #optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)
     if params.optimer == 'Adam':
-        optimizer = optim.adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
+        optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
                  weight_decay=0)
 
     num_epoches = 150  #100

@@ -218,8 +218,8 @@ def my_FCDenseNet(in_shape, n_classes=1):
                  growth_rate=12, out_chans_first_conv=48, n_classes=n_classes)
 
 def my_FCDenseNet02(in_shape, n_classes=1):
-    return FCDenseNet(in_channels=3, down_blocks=(2,4,5,7,10), 
-                 up_blocks=(10,7,5,4,2), bottleneck_layers=10, 
+    return FCDenseNet(in_channels=3, down_blocks=(3,4,5,7,10), 
+                 up_blocks=(10,7,5,4,3), bottleneck_layers=15, 
                  growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
 
 # main #################################################################
