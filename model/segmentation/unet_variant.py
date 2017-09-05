@@ -13,7 +13,7 @@ BN_EPS = 1e-4  #1e-4  #1e-5
 
 
 # 1024x1024
-class UNet1024_64in (nn.Module):
+class UNet1024_01 (nn.Module):
     def __init__(self, in_shape):
         super(UNet1024_64in, self).__init__()
         C,H,W = in_shape

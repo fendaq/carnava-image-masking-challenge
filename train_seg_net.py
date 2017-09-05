@@ -337,6 +337,8 @@ def run_train():
         LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (45, 0.0002),(55, -1)])
     if params.optimer == 'Adam':
         LR = StepLR([ (0, 0.001),  (35, 0.0005),  (55, -1)])
+
+    lr_scheduler = ReduceLROnPlateau(optimizer, 'min', patience=4, verbose=True, min_lr=1e-7)
     #LR = StepLR([ (0, 0.01),])
     #LR = StepLR([ (0, 0.005),])
 
@@ -376,14 +378,22 @@ def run_train():
     batch_acc   = 0.0
     time = 0
 
+    start_lr = get_learning_rate(optimizer)[0]
+
     start0 = timer()
     for epoch in range(start_epoch, num_epoches+1):  # loop over the dataset multiple times
 
         #---learning rate schduler ------------------------------
-        lr = LR.get_rate(epoch, num_epoches)
-        if lr<0 : break
-        adjust_learning_rate(optimizer, lr/num_grad_acc)
-        rate = get_learning_rate(optimizer)[0]*num_grad_acc #check
+        if params.using_ReduceLROnPlateau == True:
+            adjust_learning_rate(optimizer, start_lr/num_grad_acc)
+            lr_scheduler.step(valid_loss)
+            rate = get_learning_rate(optimizer)[0]*num_grad_acc #check
+            start_lr = rate
+        else:
+            lr = LR.get_rate(epoch, num_epoches)
+            if lr<0 : break
+            adjust_learning_rate(optimizer, lr/num_grad_acc)
+            rate = get_learning_rate(optimizer)[0]*num_grad_acc #check
         #--------------------------------------------------------
 
 
