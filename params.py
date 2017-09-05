@@ -9,7 +9,7 @@ my_computer  = True
 post_prosses = False #true为原图尺寸,false则为input_size
 input_size = 1024
 
-max_epochs = 60
+max_epochs = 40
 
 optimer = 'SGD'
 #optimer = 'Adam'
@@ -33,7 +33,7 @@ orig_height = 1280
 #model_factory = UNet1024;   save_path = 'unet_double_1024_baseline_1280'
 
 #model_factory = UNet1024_GCN; save_path = 'UNet1024_GCN'
-#model_factory = LKM; save_path = 'LKM_152'
-model_factory = LKM_02; save_path = 'LKM_02'
+model_factory = LKM; save_path = 'LKM_152'
+#model_factory = LKM_02; save_path = 'LKM_02'
 #model_factory = my_FCDenseNet; save_path = 'my_FCDenseNet'
 #model_factory = segnet_vgg;   save_path = 'segnet_vgg'

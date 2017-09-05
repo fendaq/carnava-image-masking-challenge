@@ -384,6 +384,7 @@ def run_train():
     start0 = timer()
     for epoch in range(start_epoch, num_epoches+1):  # loop over the dataset multiple times
 
+        if epoch > params.max_epochs: break
         #---learning rate schduler ------------------------------
         if params.using_ReduceLROnPlateau == True:
             adjust_learning_rate(optimizer, start_lr/num_grad_acc)
