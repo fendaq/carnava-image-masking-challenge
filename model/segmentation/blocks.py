@@ -89,7 +89,54 @@ class ConvResidual (nn.Module):  #basicblock结构
 
 
 class BottleNeck (nn.Module):
-    pass
+    expansion = 4
+
+    def __init__(self, inplanes, planes, stride=1, dilation_ = 1):
+        super(Bottleneck, self).__init__()
+        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=True)
+        self.bn1 = nn.BatchNorm2d(planes)
+        if dilation_ == 2:
+            padding = 2
+        elif dilation_ == 4:
+            padding = 4
+        elif dilation_ == 8:
+            padding = 8
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
+                               padding=padding, bias=True, dilation=dilation_)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=True)
+        self.bn3 = nn.BatchNorm2d(planes * 4)
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = None
+        if stride != 1 or inplanes != planes * self.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.inplanes, planes * block.expansion,
+                          kernel_size=1, stride=stride, bias=True),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+            self.downsample = downsample
+
+    def forward(self, x):
+        residual = x
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.relu(out)
+
+        out = self.conv3(out)
+        out = self.bn3(out)
+
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        out += residual
+        out = self.relu(out)
+
+        return out
 ## -----------------------------------------------------------------------------------------------------------
 
 ## origainl 3x3 stack filters used in UNet
@@ -162,6 +209,39 @@ class ResStackDecoder (nn.Module):
 
 ##---------------------------------------------------------------
 
+## for DenseNet
+class _DenseLayer(nn.Sequential):
+    def __init__(self, num_input_features, growth_rate):
+        super(_DenseLayer, self).__init__()
+        self.add_module('norm', nn.BatchNorm2d(num_input_features)),
+        self.add_module('relu', nn.ReLU(inplace=True)),
+        self.add_module('conv', nn.Conv2d(num_input_features, growth_rate, kernel_size=3, stride=1, padding=1, bias=True)),
+        self.add_module('drop', nn.Dropout2d(0.2))
+
+    def forward(self, x):
+        return super(_DenseLayer, self).forward(x)
+
+class _DenseBlock(nn.Module):
+    def __init__(self, num_input_features, growth_rate, num_layers, upsample=False):
+        super(_DenseBlock, self).__init__()
+        self.upsample = upsample
+        self.layers = nn.ModuleList([_DenseLayer(num_input_features 
+                                      + i*growth_rate,growth_rate) for i in range(num_layers)])
+    
+    def forward(self, x):
+        if self.upsample:
+            new_features = []
+            for layer in self.layers:
+                out = layer(x)
+                x = torch.cat([x, out], 1)
+                new_features.append(out)
+            return torch.cat(new_features,1)
+        else:
+            for layer in self.layers:
+                out = layer(x)
+                x = torch.cat([x,out], 1)
+            return x
+##---------------------------------------------------------------
 
 ## for SegNet
 class conv2DBatchNormRelu(nn.Module):
@@ -292,6 +372,10 @@ class resnet_GCN(nn.Module):
         self.shortcut = None
         if inplanes != outplanes:
             self.shortcut = nn.Conv2d(inplanes, outplanes, kernel_size=1)
+            # self.shortcut = nn.Sequential(
+            #     nn.Conv2d(inplanes, outplanes, kernel_size=1),
+            #     nn.BatchNorm2d(outplanes)
+            # )
     
     def forward(self, x):
         residual = x
@@ -325,7 +409,6 @@ class resnet_GCN(nn.Module):
 
         return out
 ##---------------------------------------------------------------
-
 ## for boundary refine
 class Refine(nn.Module):
     def __init__(self,planes):
@@ -357,7 +440,51 @@ class Refine(nn.Module):
 ## -----------------------------------------------------------------------------------------------------------
 
 ## for SPP
+class ASPP(nn.Module): #Atrous Spatial Pyramid Pooling
+    
+    def __init__(self, inplanes, midplanes, outplanes, dilation_series, padding_series): 
+        super(ASPP, self).__init__()
+        self.conv2d_list = nn.ModuleList()
+        self.conv2d_list.append(nn.Conv2d(inplanes, midplanes, kernel_size=1))
+        for dilation_, padding_ in zip(dilation_series, padding_series):
+            self.conv2d_list.append(nn.Conv2d(inplanes, midplanes, kernel_size=3, stride=1, padding=padding_, dilation=dilation_))
 
+        self.bn1 = nn.BatchNorm2d(midplanes)
+        self.bn2 = nn.BatchNorm2d(midplanes)
+        self.bn3 = nn.BatchNorm2d(midplanes)
+        self.bn4 = nn.BatchNorm2d(midplanes)
+
+        self.conv = nn.Conv2d(midplanes*4,outplanes,kernel_size=1)
+        self.bn = nn.BatchNorm2d(outplanes)
+
+        self.relu = nn.ReLU(inplace=True)
+
+        #self.classify = nn.Conv2d(outplanes, num_classes, kernel_size=1)
+        
+        # average pool wait to implement
+
+    def forward(self, x):
+        out0 = self.conv2d_list[0](x)
+        out0 = self.bn1(out0)
+
+        out1 = self.conv2d_list[1](x)
+        out1 = self.bn2(out1)
+
+        out2 = self.conv2d_list[2](x)
+        out2 = self.bn3(out2)
+
+        out3 = self.conv2d_list[3](x)
+        out3 = self.bn4(out3)
+    
+        sum = torch.cat([out0,out1,out2,out3],1)
+
+        out = self.conv(sum)
+        out = self.bn(out)
+        out = self.relu(out)
+
+        return out
+
+        #out = self.classify(out)
 
 ## -----------------------------------------------------------------------------------------------------------
 

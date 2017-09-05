@@ -134,29 +134,29 @@ class UNet1024_ASPP (nn.Module):
         #assert(C==3)
 
         #1024
-        self.down1 = StackEncoder(  C,   64, kernel_size=3)   #512
-        self.down2 = StackEncoder( 64,   64, kernel_size=3)   #256
+        self.down1 = StackEncoder(  C,   24, kernel_size=3)   #512
+        self.down2 = StackEncoder( 24,   64, kernel_size=3)   #256
         self.down3 = StackEncoder( 64,  128, kernel_size=3)   #128
         self.down4 = StackEncoder(128,  256, kernel_size=3)   # 64
         self.down5 = StackEncoder(256,  512, kernel_size=3)   # 32
-        self.down6 = StackEncoder(512,  1024, kernel_size=3)   # 16
+        self.down6 = StackEncoder(512,  768, kernel_size=3)   # 16
         
         '''
         self.center = nn.Sequential(
             ConvBnRelu2d(1024, 1024, kernel_size=3, padding=1, stride=1 ),
         )
         '''
-        #self.center = 
+        self.center = ASPP(768, 768, 768, [6,12,18], [6,12,18])
 
         # 8
         # x_big_channels, x_channels, y_channels
-        self.up6 = StackDecoder(1024,1024, 512, kernel_size=3)  # 16
+        self.up6 = StackDecoder(768,768, 512, kernel_size=3)  # 16
         self.up5 = StackDecoder( 512, 512, 256, kernel_size=3)  # 32
         self.up4 = StackDecoder( 256, 256, 128, kernel_size=3)  # 64
         self.up3 = StackDecoder( 128, 128,  64, kernel_size=3)  #128
-        self.up2 = StackDecoder(  64,  64,  64, kernel_size=3)  #256
-        self.up1 = StackDecoder(  64,  64,  64, kernel_size=3)  #512
-        self.classify = nn.Conv2d(64, 1, kernel_size=1, padding=0, stride=1, bias=True)
+        self.up2 = StackDecoder(  64,  64,  24, kernel_size=3)  #256
+        self.up1 = StackDecoder(  24,  24,  24, kernel_size=3)  #512
+        self.classify = nn.Conv2d(24, 1, kernel_size=1, padding=0, stride=1, bias=True)
 
 
     def forward(self, x):
@@ -184,6 +184,8 @@ class UNet1024_ASPP (nn.Module):
         out = torch.squeeze(out, dim=1)
         return out
 
+class UNet1024_DenseNet (nn.Module):
+    pass
 # main #################################################################
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))

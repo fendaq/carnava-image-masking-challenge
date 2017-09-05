@@ -144,6 +144,8 @@ class ASPP(nn.Module): #Atrous Spatial Pyramid Pooling
 
         out = self.classify(out)
 
+        return out
+
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes):

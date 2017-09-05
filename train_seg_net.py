@@ -338,6 +338,7 @@ def run_train():
     if params.optimer == 'Adam':
         LR = StepLR([ (0, 0.001),  (35, 0.0005),  (55, -1)])
 
+    #https://github.com/EKami/carvana-challenge/blob/7d20494f40b39686c25159403e2a27a82f4096a9/src/nn/classifier.py
     lr_scheduler = ReduceLROnPlateau(optimizer, 'min', patience=4, verbose=True, min_lr=1e-7)
     #LR = StepLR([ (0, 0.01),])
     #LR = StepLR([ (0, 0.005),])

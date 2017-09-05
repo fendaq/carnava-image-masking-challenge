@@ -1,6 +1,8 @@
 from common import *
 # common tool for dataset
 
+#图像前处理，see https://github.com/Hsuxu/carvana-pytorch-uNet/blob/master/preprocessing.py
+
 # draw -----------------------------------
 def im_show(name, image, resize=1):
     H,W = image.shape[0:2]
