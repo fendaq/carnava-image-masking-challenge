@@ -371,11 +371,11 @@ class resnet_GCN(nn.Module):
 
         self.shortcut = None
         if inplanes != outplanes:
-            self.shortcut = nn.Conv2d(inplanes, outplanes, kernel_size=1)
-            # self.shortcut = nn.Sequential(
-            #     nn.Conv2d(inplanes, outplanes, kernel_size=1),
-            #     nn.BatchNorm2d(outplanes)
-            # )
+            #self.shortcut = nn.Conv2d(inplanes, outplanes, kernel_size=1)
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(inplanes, outplanes, kernel_size=1),
+                nn.BatchNorm2d(outplanes)
+            )
     
     def forward(self, x):
         residual = x
