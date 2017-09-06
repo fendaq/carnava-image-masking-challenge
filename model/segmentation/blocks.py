@@ -323,7 +323,7 @@ class segnetUp3(nn.Module):
 ## for Large kernel matters
 #https://github.com/ycszen/pytorch-ss/blob/master/gcn.py
 class GCN(nn.Module):
-    def __init__(self, inplanes, planes, ks=7):
+    def __init__(self, inplanes, planes, ks=15):
         super(GCN, self).__init__()
         self.conv_l1 = nn.Conv2d(inplanes, planes, kernel_size=(ks, 1),
                                  padding=(ks//2, 0))

@@ -359,8 +359,9 @@ def run_train():
     #training ####################################################################3
     log.write('** start training here! **\n')
     log.write(' num_grad_acc x batch_size = %d x %d=%d\n'%(num_grad_acc,batch_size,num_grad_acc*batch_size))
-    log.write('input_size = %d x %d\n'%(params.input_size,params.input_size) )
+    log.write(' input_size = %d x %d\n'%(params.input_size,params.input_size) )
     log.write(' optimizer=%s\n'%str(optimizer) )
+    log.write(' is_ReduceLRonPlateau: %s\n'%str(params.using_ReduceLROnPlateau))
     log.write(' LR=%s\n\n'%str(LR) )
     log.write('\n')
 
