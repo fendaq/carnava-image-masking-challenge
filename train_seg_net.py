@@ -696,6 +696,102 @@ def run_submit1():
     log.write('\n')
 
 
+def save_origin_mask(): #保存预测的原始mask图片
+
+    is_merge_bn = 1
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-00d'
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    if params.my_computer:
+        out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    else:
+        out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
+    model_file = out_dir +'/snap/047.pth'  #final
+
+    #logging, etc --------------------
+    os.makedirs(out_dir+'/out_mask/results',  exist_ok=True)
+    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
+
+    log = Logger()
+    log.open(out_dir+'/log.make_mask.txt',mode='a')
+    log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
+    log.write('** some project setting **\n')
+
+
+
+    ## dataset ----------------------------
+    log.write('** dataset setting **\n')
+    batch_size = 16
+
+    test_dataset = KgCarDataset( 'test_100064',  'test',#100064  #3197
+                                 #'valid_v0_768',  'train1024x1024',#100064  #3197
+                                     transform= [
+                                    ],mode='test')
+    test_loader  = DataLoader(
+                        test_dataset,
+                        sampler     = SequentialSampler(test_dataset),
+                        batch_size  = batch_size,
+                        drop_last   = False,
+                        num_workers = 12,
+                        pin_memory  = True)
+
+    log.write('\tbatch_size         = %d\n'%batch_size)
+    log.write('\ttest_dataset.split = %s\n'%test_dataset.split)
+    log.write('\tlen(test_dataset)  = %d\n'%len(test_dataset))
+    log.write('\n')
+
+
+    ## net ----------------------------------------
+    net = Net(in_shape=(3, CARVANA_HEIGHT, CARVANA_WIDTH))
+    net.load_state_dict(torch.load(model_file))
+    net.cuda()
+
+
+    if is_merge_bn: merge_bn_in_net(net)
+    ## start testing now #####
+    log.write('start prediction ...\n')
+    start = timer()
+
+    net.eval()
+    # probs = predict8_in_blocks( net, test_loader, block_size=CSV_BLOCK_SIZE, save_dir=out_dir+'/submit',log=log)           # 20 min
+
+    for it, (images, indices) in enumerate(test_loader, 0):
+        images  = Variable(images,volatile=True).cuda().half()
+        #labels  = Variable(labels).cuda().half()
+        batch_size = len(indices)
+
+        #forward
+        t0 =  timer()
+        logits = net(images)
+        probs  = F.sigmoid(logits)
+
+        #warm start
+        if it>10:
+            time_taken = time_taken + timer() - t0
+            #print(time_taken)
+
+        #a = dice_loss((probs.float()>0.5).float(), labels.float(), is_average=False)
+        #accs[start:start + batch_size]=a.data.cpu().numpy()
+
+        ## full results ----------------
+        probs  = (probs.data.float().cpu().numpy()*255).astype(np.uint8)
+        for b in range(batch_size):
+            name = names[indices[b]]
+
+            prob = probs[b]
+            prob = cv2.resize(prob,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)  #INTER_CUBIC  ##
+
+            full_indices[start+b] = indices[b]
+
+            if is_full_results:
+
+                cv2.imwrite(out_dir+'/valid/full_results_by_name/%s.png'%(name), results)
+
+
+        pass ######################
+        start = start + batch_size
+    
+    log.write('\tpredict_in_blocks = %f min\n'%((timer() - start) / 60))
+    log.write('\n')
 
 def run_submit2():
 

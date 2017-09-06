@@ -1,6 +1,9 @@
 #https://github.com/milesial/Pytorch-UNet
 #https://github.com/milesial/Pytorch-UNet/blob/74ee006a7a4dbde4c9aef16680b1424632c7cfe4/predict.py
 
+#注意，此文件使用python3.5版本
+#测试发现浮点有问题，先不用
+
 import numpy as np
 import pydensecrf.densecrf as dcrf
 
@@ -26,6 +29,7 @@ def dense_crf(img, output_probs):
 
     output_probs = np.expand_dims(output_probs, 0)
     output_probs = np.append(1 - output_probs, output_probs, axis=0)
+    output_probs = np.clip(output_probs, 1e-5, 1)
 
     d = dcrf.DenseCRF2D(w, h, 2)
     U = -np.log(output_probs)
@@ -33,7 +37,7 @@ def dense_crf(img, output_probs):
     U = np.ascontiguousarray(U)
     img = np.ascontiguousarray(img)
 
-
+    U = np.asfarray(U, dtype='float64')
     d.setUnaryEnergy(U)
 
     d.addPairwiseGaussian(sxy=20, compat=3)
@@ -139,7 +143,7 @@ def test_valid():
 
 
         ## full results ----------------
-        #probs  = (probs.data.float().cpu().numpy()*255).astype(np.uint8)
+        probs  = (probs.data.float().cpu().numpy()).astype(np.uint8)
         for b in range(batch_size):
             name = names[indices[b]]
             mask_file = CARVANA_DIR + '/annotations/%s/%s_mask.png'%('train',name)
@@ -151,9 +155,9 @@ def test_valid():
             prob = probs[b]
             prob = cv2.resize(prob,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)  #INTER_CUBIC  ##
 
-            prob_crf = dense_crf(np.array(image).astype(np.unit8), prob)
+            prob_crf = dense_crf(np.array(image).astype(np.uint8), prob)
 
-            prob = (prob.data.float().cpu().numpy()*255).astype(np.uint8)
+            prob_crf = prob_crf * 255
 
             score = one_dice_loss_py(prob>127, label>127)
             full_accs   [start+b] = score
@@ -189,3 +193,13 @@ def test_valid():
             f.write('%s\t%f\t%f\t%d\n'%(names[n],accs[n],full_accs[n],full_indices[n]))
         f.write('\naccuracy (full) = %f (%f)\n'%(accuracy,full_accuracy))
         f.write('\ntime_taken min = %f\n'%(time_taken))
+
+# main #################################################################
+if __name__ == '__main__':
+    print( '%s: calling main function ... ' % os.path.basename(__file__))
+
+    #run_submit1()
+    #run_submit2()
+
+    test_valid()
+    print('\nsucess!')
