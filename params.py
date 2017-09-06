@@ -9,7 +9,7 @@ my_computer  = True
 post_prosses = False #true为原图尺寸,false则为input_size
 input_size = 1024
 
-max_epochs = 40
+max_epochs = 42
 
 optimer = 'SGD'
 #optimer = 'Adam'
