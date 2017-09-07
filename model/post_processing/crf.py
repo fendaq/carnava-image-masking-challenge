@@ -2,10 +2,11 @@
 #https://github.com/milesial/Pytorch-UNet/blob/74ee006a7a4dbde4c9aef16680b1424632c7cfe4/predict.py
 
 #注意，此文件使用python3.5版本
-#测试发现浮点有问题，先不用
+#测试参数效果不好，未成功
 
 import numpy as np
 import pydensecrf.densecrf as dcrf
+from pydensecrf.utils import unary_from_softmax
 
 import params
 
@@ -29,15 +30,16 @@ def dense_crf(img, output_probs):
 
     output_probs = np.expand_dims(output_probs, 0)
     output_probs = np.append(1 - output_probs, output_probs, axis=0)
-    output_probs = np.clip(output_probs, 1e-5, 1)
 
+    output_probs = np.clip(output_probs, 1e-5, 1)
     d = dcrf.DenseCRF2D(w, h, 2)
-    U = -np.log(output_probs)
-    U = U.reshape((2, -1))
+    #U = -np.log(output_probs)
+    #U = U.reshape((2, -1))
+    U = unary_from_softmax(output_probs)
     U = np.ascontiguousarray(U)
     img = np.ascontiguousarray(img)
 
-    U = np.asfarray(U, dtype='float64')
+    #U = np.asfarray(U, dtype='float64')
     d.setUnaryEnergy(U)
 
     d.addPairwiseGaussian(sxy=20, compat=3)
@@ -83,7 +85,7 @@ def test_valid():
     log.write('\n')
 
 
-    batch_size   =  8
+    batch_size   =  12
     valid_dataset = KgCarDataset(
                                 #'train_160', 'train512x512',
                                 #'train_v0_4320', 'train512x512',
@@ -95,7 +97,7 @@ def test_valid():
                         sampler = SequentialSampler(valid_dataset),
                         batch_size  = batch_size,
                         drop_last   = False,
-                        num_workers = 6,
+                        num_workers = 8,
                         pin_memory  = True)
     ##check_dataset(valid_dataset, valid_loader), exit(0)
 
@@ -159,7 +161,7 @@ def test_valid():
 
             prob_crf = prob_crf * 255
 
-            score = one_dice_loss_py(prob>127, label>127)
+            score = one_dice_loss_py(prob_crf>127, label>127)
             full_accs   [start+b] = score
             full_indices[start+b] = indices[b]
 

@@ -722,17 +722,31 @@ def save_origin_mask(): #保存预测的原始mask图片
     log.write('** dataset setting **\n')
     batch_size = 16
 
-    test_dataset = KgCarDataset( 'test_100064',  'test',#100064  #3197
-                                 #'valid_v0_768',  'train1024x1024',#100064  #3197
-                                     transform= [
-                                    ],mode='test')
-    test_loader  = DataLoader(
-                        test_dataset,
-                        sampler     = SequentialSampler(test_dataset),
-                        batch_size  = batch_size,
-                        drop_last   = False,
-                        num_workers = 12,
-                        pin_memory  = True)
+    if save_test:
+        test_dataset = KgCarDataset( 'test_100064',  'test',#100064  #3197
+                                    #'valid_v0_768',  'train1024x1024',#100064  #3197
+                                        transform= [
+                                        ],mode='test')
+        test_loader  = DataLoader(
+                            test_dataset,
+                            sampler     = SequentialSampler(test_dataset),
+                            batch_size  = batch_size,
+                            drop_last   = False,
+                            num_workers = 12,
+                            pin_memory  = True)
+
+    else:
+        test_dataset = KgCarDataset( 'train_v0_4320',  'train',#100064  #3197
+                                    #'valid_v0_768',  'train1024x1024',#100064  #3197
+                                        transform= [
+                                        ],mode='test')
+        test_loader  = DataLoader(
+                            test_dataset,
+                            sampler     = SequentialSampler(test_dataset),
+                            batch_size  = batch_size,
+                            drop_last   = False,
+                            num_workers = 12,
+                            pin_memory  = True)
 
     log.write('\tbatch_size         = %d\n'%batch_size)
     log.write('\ttest_dataset.split = %s\n'%test_dataset.split)
@@ -778,14 +792,16 @@ def save_origin_mask(): #保存预测的原始mask图片
             name = names[indices[b]]
 
             prob = probs[b]
-            prob = cv2.resize(prob,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)  #INTER_CUBIC  ##
+            if save_full_resolution_mask == True:
+                prob = cv2.resize(prob,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)  #INTER_CUBIC  ##
 
             full_indices[start+b] = indices[b]
 
             if is_full_results:
-
-                cv2.imwrite(out_dir+'/valid/full_results_by_name/%s.png'%(name), results)
-
+                if save_test:
+                    cv2.imwrite(out_dir+'/out_mask/test_mask/%s.png'%(name), results)
+                else:
+                    cv2.imwrite(out_dir+'/out_mask/train_mask/%s.png'%(name), results)
 
         pass ######################
         start = start + batch_size
