@@ -95,7 +95,7 @@ class KgCarDataset(Dataset):
         #print(img_file)
         img   = cv2.imread(img_file)
         if params.post_prosses != True:
-            img = cv2.resize(img,(CARVANA_W,CARVANA_H))
+            img = cv2.resize(img,(CARVANA_W,CARVANA_H)) #cv2.resize (W, H)
         image = img.astype(np.float32)/255
         return image
 
@@ -192,8 +192,10 @@ class post_prosses_Dataset(Dataset):
         #img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
         #print(img_file)
         mask   = cv2.imread(mask_file)
+        '''
         if params.post_prosses != True:
             mask = cv2.resize(mask,(CARVANA_W,CARVANA_H))
+        '''
         mask = mask.astype(np.float32)/255
         return mask
 

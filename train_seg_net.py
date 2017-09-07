@@ -374,7 +374,8 @@ def run_train():
     smooth_acc  = 0.0
     train_loss  = 0.0
     train_acc   = 0.0
-    valid_loss  = 0.0
+    #valid_loss  = 0.0
+    valid_loss = 100
     valid_acc   = 0.0
     batch_loss  = 0.0
     batch_acc   = 0.0
