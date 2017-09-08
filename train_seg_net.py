@@ -710,6 +710,8 @@ def save_origin_mask(): #保存预测的原始mask图片
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/out_mask/results',  exist_ok=True)
+    os.makedirs(out_dir+'/out_mask/test_mask',  exist_ok=True)
+    os.makedirs(out_dir+'/out_mask/train_mask',  exist_ok=True)
     backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
 
     log = Logger()
@@ -721,9 +723,9 @@ def save_origin_mask(): #保存预测的原始mask图片
 
     ## dataset ----------------------------
     log.write('** dataset setting **\n')
-    batch_size = 16
+    batch_size = 4
 
-    if save_test:
+    if params.save_test:
         test_dataset = KgCarDataset( 'test_100064',  'test',#100064  #3197
                                     #'valid_v0_768',  'train1024x1024',#100064  #3197
                                         transform= [
@@ -737,7 +739,7 @@ def save_origin_mask(): #保存预测的原始mask图片
                             pin_memory  = True)
 
     else:
-        test_dataset = KgCarDataset( 'train_v0_4320',  'train',#100064  #3197
+        test_dataset = KgCarDataset( 'train_5088',  'train',#100064  #3197
                                     #'valid_v0_768',  'train1024x1024',#100064  #3197
                                         transform= [
                                         ],mode='test')
@@ -760,6 +762,10 @@ def save_origin_mask(): #保存预测的原始mask图片
     net.load_state_dict(torch.load(model_file))
     net.cuda()
 
+    num_valid = len(test_dataset)
+    names = test_dataset.names
+    df = test_dataset.df.set_index('id')
+
 
     if is_merge_bn: merge_bn_in_net(net)
     ## start testing now #####
@@ -769,8 +775,10 @@ def save_origin_mask(): #保存预测的原始mask图片
     net.eval()
     # probs = predict8_in_blocks( net, test_loader, block_size=CSV_BLOCK_SIZE, save_dir=out_dir+'/submit',log=log)           # 20 min
 
+    time_taken =0
+    end  =0
     for it, (images, indices) in enumerate(test_loader, 0):
-        images  = Variable(images,volatile=True).cuda().half()
+        images  = Variable(images,volatile=True).cuda()
         #labels  = Variable(labels).cuda().half()
         batch_size = len(indices)
 
@@ -793,16 +801,13 @@ def save_origin_mask(): #保存预测的原始mask图片
             name = names[indices[b]]
 
             prob = probs[b]
-            if save_full_resolution_mask == True:
+            if params.save_full_resolution_mask == True:
                 prob = cv2.resize(prob,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)  #INTER_CUBIC  ##
 
-            full_indices[start+b] = indices[b]
-
-            if is_full_results:
-                if save_test:
-                    cv2.imwrite(out_dir+'/out_mask/test_mask/%s.png'%(name), results)
-                else:
-                    cv2.imwrite(out_dir+'/out_mask/train_mask/%s.png'%(name), results)
+            if params.save_test:
+                cv2.imwrite(out_dir+'/out_mask/test_mask/%s.png'%(name), prob)
+            else:
+                cv2.imwrite(out_dir+'/out_mask/train_mask/%s.png'%(name), prob)
 
         pass ######################
         start = start + batch_size
@@ -900,7 +905,7 @@ def run_submit2():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    opts, args = getopt.getopt(sys.argv[1:], 'tv', ['s1','s2'])
+    opts, args = getopt.getopt(sys.argv[1:], 'tvs', ['s1','s2'])
     
     for opt, val in opts: 
         print(opt)
@@ -909,6 +914,8 @@ if __name__ == '__main__':
         run_train()
     elif opt =='-v':  
         run_valid()
+    elif opt =='-s':  
+        save_origin_mask()
     elif opt =='--s1':
         run_submit1()
     elif opt =='--s2':

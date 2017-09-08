@@ -1,5 +1,5 @@
 from model.segmentation.SegNet import segnet_vgg
-from model.segmentation.my_unet_baseline import UNet1024
+from model.segmentation.my_unet_baseline import UNet1024, UNet128
 from model.segmentation.unet_variant import UNet1024_01,UNet1024_GCN,UNet1024_GCN_baseline,UNet1024_GCN_k15,UNet1024_ASPP
 from model.segmentation.LKM import LKM,LKM_02
 from model.segmentation.FC_DenseNet import my_FCDenseNet02,my_FCDenseNet,FCDenseNet103
@@ -8,9 +8,11 @@ my_computer  = True
 
 input_size = 1024
 
-#---------保存完整mask并后处理-----------
+#----保存完整mask并后处理----------------
+#-------用于save_origin_mask()---------
 save_test = False
 save_full_resolution_mask = False
+#-------carvana_cars.py---------------
 post_prosses = False #true则迭代返回原图尺寸,false则为input_size
 #-------------------------
 
@@ -18,10 +20,10 @@ max_epochs = 42
 
 optimer = 'SGD'
 #optimer = 'Adam'
-using_ReduceLROnPlateau = False
+using_ReduceLROnPlateau = True #bug已修复
 
-real_batch_size = 16
-step_batch_size = 2
+real_batch_size = 15
+step_batch_size = 3
 
 
 #test_batch_size = 8
@@ -31,7 +33,7 @@ orig_height = 1280
 
 # threshold = 0.5
 
-#model_factory = LKM;   save_path = 'test'
+#model_factory = UNet128;   save_path = 'test'
 
 #single model train
 model_factory = UNet1024;   save_path = 'unet_double_1024_baseline'

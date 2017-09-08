@@ -2,18 +2,19 @@ import params
 
 from common import *
 from dataset.carvana_cars import *
+from train_seg_net import evaluate, criterion, show_batch_results
 
 from model.tool import *
 from model.rate import *
 from model.segmentation.loss import *
 from model.segmentation.blocks import *
 
-Net = params.model_factory
+Net = params.post_model
 
 CSV_BLOCK_SIZE = 10000
 
 # ------------------------------------------------------------------------------------
-def run_train():
+def run_post_train():
 
     if params.my_computer:
         out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
@@ -26,15 +27,15 @@ def run_train():
 
     #logging, etc --------------------
     os.makedirs(out_dir, exist_ok=True)
-    os.makedirs(out_dir+'/train/results', exist_ok=True)
-    os.makedirs(out_dir+'/valid/results', exist_ok=True)
-    os.makedirs(out_dir+'/backup', exist_ok=True)
-    os.makedirs(out_dir+'/checkpoint', exist_ok=True)
-    os.makedirs(out_dir+'/snap', exist_ok=True)
-    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/train.code.zip')
+    os.makedirs(out_dir+'/post_train/train/results', exist_ok=True)
+    os.makedirs(out_dir+'/post_train/valid/results', exist_ok=True)
+    os.makedirs(out_dir+'/post_train/backup', exist_ok=True)
+    os.makedirs(out_dir+'/post_train/checkpoint', exist_ok=True)
+    os.makedirs(out_dir+'/post_train/snap', exist_ok=True)
+    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/post_train/backup/train.code.zip')
 
     log = Logger()
-    log.open(out_dir+'/log.train.txt',mode='a')
+    log.open(out_dir+'/post_train/log.post_train.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** experiment for average labels channel as prior**\n\n')
     
@@ -71,12 +72,13 @@ def run_train():
     batch_size = params.step_batch_size
     num_grad_acc =  params.real_batch_size//batch_size
 
-    train_dataset = KgCarDataset(  'train_v0_4320',
+    train_dataset = post_prosses_Dataset(  'train_v0_4320',
                                    #'train_5088',
                                    'train',
                                    #'train128x128', ## 1024x1024 ##
                                    #'test_100064', 'test1024x1024',
-                                transform = [ lambda x,y:train_augment(x,y), ], mode='train')
+                                   #transform = [ lambda x,y:train_augment(x,y), ],
+                                   mode='train')
     train_loader  = DataLoader(
                         train_dataset,
                         #sampler = RandomSampler(train_dataset),
@@ -87,10 +89,10 @@ def run_train():
                         pin_memory  = True)
     ##check_dataset(train_dataset, train_loader), exit(0)
 
-    valid_dataset = KgCarDataset('valid_v0_768', 
+    valid_dataset = post_prosses_Dataset('valid_v0_768',
                                  #'train128x128', 
                                  'train',
-                                  transform=[], mode='train')
+                                 mode='train')
     valid_loader  = DataLoader(
                         valid_dataset,
                         sampler = SequentialSampler(valid_dataset),
@@ -111,7 +113,7 @@ def run_train():
     log.write('** net setting **\n')
 
     #net = Net(in_shape=(3, 128, 128))
-    net = Net(in_shape=(3, params.input_size, params.input_size))
+    net = Net(in_shape=(4, params.input_size, params.input_size))
     net.cuda()
 
     log.write('%s\n\n'%(type(net)))
@@ -174,7 +176,8 @@ def run_train():
     smooth_acc  = 0.0
     train_loss  = 0.0
     train_acc   = 0.0
-    valid_loss  = 0.0
+    #valid_loss  = 0.0
+    valid_loss = 100
     valid_acc   = 0.0
     batch_loss  = 0.0
     batch_acc   = 0.0
@@ -191,8 +194,6 @@ def run_train():
             adjust_learning_rate(optimizer, start_lr/num_grad_acc)
             lr_scheduler.step(valid_loss)
             rate = get_learning_rate(optimizer)[0]*num_grad_acc #check
-            if rate != start_lr:
-                print('change')
             start_lr = rate
         else:
             lr = LR.get_rate(epoch, num_epoches)
@@ -214,12 +215,12 @@ def run_train():
 
         #if 1:
         if epoch in epoch_save:
-            torch.save(net.state_dict(),out_dir +'/snap/%03d.pth'%epoch)
+            torch.save(net.state_dict(),out_dir +'/post_train/snap/%03d.pth'%epoch)
             torch.save({
                 'state_dict': net.state_dict(),
                 'optimizer' : optimizer.state_dict(),
                 'epoch'     : epoch,
-            }, out_dir +'/checkpoint/%03d.pth'%epoch)
+            }, out_dir +'/post_train/checkpoint/%03d.pth'%epoch)
             ## https://github.com/pytorch/examples/blob/master/imagenet/main.py
 
         if epoch==num_epoches: break ##########################################-
@@ -278,7 +279,7 @@ def run_train():
             if 0:
             #if it%100==0:
                 show_batch_results(indices, images, probs, labels,
-                                   wait=1, out_dir=out_dir+'/train/results', names=train_dataset.names, epoch=epoch, it=it)
+                                   wait=1, out_dir=out_dir+'/post_train/train/results', names=train_dataset.names, epoch=epoch, it=it)
 
         end  = timer()
         time = (end - start)/60
@@ -291,6 +292,26 @@ def run_train():
     time0 = (end0 - start0) / 60
     log.write('\nalltime = %f min\n'%time0)
     ## save final
-    torch.save(net.state_dict(),out_dir +'/snap/final.pth')
+    torch.save(net.state_dict(),out_dir +'/post_train/snap/final.pth')
 
 # ------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    print('%s: calling main function ... ' % os.path.basename(__file__))
+
+    opts, args = getopt.getopt(sys.argv[1:], 't', ['s1', 's2'])
+
+    for opt, val in opts:
+        print(opt)
+
+    if opt == '-t':
+        run_post_train()
+        '''
+    elif opt == '--s1':
+        run_submit1()
+    elif opt == '--s2':
+        run_submit2()
+    else:
+        print('nothing,stop')
+        '''
+
+    print('\nsucess!')

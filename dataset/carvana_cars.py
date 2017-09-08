@@ -161,7 +161,7 @@ class post_prosses_Dataset(Dataset):
         self.df        = df
         self.split     = split
         self.folder    = folder
-        self.transform = transform
+        #self.transform = transform
 
         self.mode      = mode
         self.names     = names
@@ -188,10 +188,10 @@ class post_prosses_Dataset(Dataset):
         view   = int(name[-2:])-1
 
         #mask_file = CARVANA_DIR + '/images/%s/%s.jpg'%(folder,name)
-        mask_file = out_dir + '/out_mask/full_results_by_name/%s.png'%(name)
+        mask_file = out_dir + '/out_mask/%s_mask/%s.png'%(folder,name)
         #img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
         #print(img_file)
-        mask   = cv2.imread(mask_file)
+        mask   = cv2.imread(mask_file,cv2.IMREAD_GRAYSCALE)
         '''
         if params.post_prosses != True:
             mask = cv2.resize(mask,(CARVANA_W,CARVANA_H))
@@ -220,8 +220,10 @@ class post_prosses_Dataset(Dataset):
         label = self.get_label(index)
 
         image = image_to_tensor(image)
-        mask = image_to_tensor(mask)
-        label = image_to_tensor(label)
+        mask = label_to_tensor(mask)
+        label = label_to_tensor(label)
+
+        mask = mask.unsqueeze(0)
 
         post_image = torch.cat([image, mask],0)
 
@@ -232,7 +234,7 @@ class post_prosses_Dataset(Dataset):
         mask = self.get_mask(index)
 
         image = image_to_tensor(image)
-        mask = image_to_tensor(mask)
+        mask = label_to_tensor(mask)
 
         post_image = torch.cat([image, mask],0)
         return image, index
