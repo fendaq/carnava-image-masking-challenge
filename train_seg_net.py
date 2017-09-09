@@ -407,7 +407,7 @@ def run_train():
             valid_loss, valid_acc = evaluate(net, valid_loader)
 
             print('\r',end='',flush=True)
-            log.write('%5.1f   %5d    %0.4f   | %0.5f  %0.5f | %0.5f  %0.5f | %0.5f  %0.5f  |  %3.1f min \n' % \
+            log.write('%5.1f   %5d    %0.6f   | %0.5f  %0.6f | %0.5f  %0.5f | %0.5f  %0.5f  |  %3.1f min \n' % \
                     (epoch, num_its, rate, valid_loss, valid_acc, train_loss, train_acc, batch_loss, batch_acc, time))
 
 

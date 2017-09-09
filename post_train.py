@@ -2,12 +2,16 @@ import params
 
 from common import *
 from dataset.carvana_cars import *
-from train_seg_net import evaluate, criterion, show_batch_results
+from train_seg_net import evaluate, criterion, show_batch_results, predict8_in_blocks
 
 from model.tool import *
 from model.rate import *
 from model.segmentation.loss import *
 from model.segmentation.blocks import *
+
+#-------------测试 itchat-----------
+import itchat
+#----------------------------------
 
 Net = params.post_model
 
@@ -209,9 +213,14 @@ def run_post_train():
             valid_loss, valid_acc = evaluate(net, valid_loader)
 
             print('\r',end='',flush=True)
-            log.write('%5.1f   %5d    %0.4f   | %0.5f  %0.5f | %0.5f  %0.5f | %0.5f  %0.5f  |  %3.1f min \n' % \
+            log.write('%5.1f   %5d    %0.6f   | %0.5f  %0.6f | %0.5f  %0.5f | %0.5f  %0.5f  |  %3.1f min \n' % \
                     (epoch, num_its, rate, valid_loss, valid_acc, train_loss, train_acc, batch_loss, batch_acc, time))
 
+            #-------------测试 itchat-----------
+            str_epoch = str(epoch)
+            str_valid_acc = str(valid_acc)
+            itchat.send('epoch is '+ str_epoch + ' and ' + ' valid_acc is ' + str_valid_acc, toUserName='filehelper')
+            #----------------------------------
 
         #if 1:
         if epoch in epoch_save:
@@ -294,9 +303,160 @@ def run_post_train():
     ## save final
     torch.save(net.state_dict(),out_dir +'/post_train/snap/final.pth')
 
+def run_post_submit1():
+
+    is_merge_bn = 1
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-00d'
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    if params.my_computer:
+        out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    else:
+        out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
+    model_file = out_dir +'/snap/047.pth'  #final
+
+    out_dir = out_dir + '/post_train'
+
+    #logging, etc --------------------
+    os.makedirs(out_dir+'/submit/results',  exist_ok=True)
+    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
+
+    log = Logger()
+    log.open(out_dir+'/log.submit.txt',mode='a')
+    log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
+    log.write('** some project setting **\n')
+
+
+
+    ## dataset ----------------------------
+    log.write('** dataset setting **\n')
+    batch_size = 4
+
+    test_dataset = post_prosses_Dataset( 'test_100064',  'test',#100064  #3197
+                                 #'valid_v0_768',  'train1024x1024',#100064  #3197
+                                     transform= [
+                                    ],mode='test')
+    test_loader  = DataLoader(
+                        test_dataset,
+                        sampler     = SequentialSampler(test_dataset),
+                        batch_size  = batch_size,
+                        drop_last   = False,
+                        num_workers = 12,
+                        pin_memory  = True)
+
+    log.write('\tbatch_size         = %d\n'%batch_size)
+    log.write('\ttest_dataset.split = %s\n'%test_dataset.split)
+    log.write('\tlen(test_dataset)  = %d\n'%len(test_dataset))
+    log.write('\n')
+
+
+    ## net ----------------------------------------
+    net = Net(in_shape=(4, CARVANA_HEIGHT, CARVANA_WIDTH))
+    net.load_state_dict(torch.load(model_file))
+    net.cuda()
+
+
+    if is_merge_bn: merge_bn_in_net(net)
+    ## start testing now #####
+    log.write('start prediction ...\n')
+    start = timer()
+
+    net.eval()
+    probs = predict8_in_blocks( net, test_loader, block_size=CSV_BLOCK_SIZE, save_dir=out_dir+'/submit',log=log)           # 20 min
+
+    log.write('\tpredict_in_blocks = %f min\n'%((timer() - start) / 60))
+    log.write('\n')
+
+def run_submit2():
+
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00c'
+    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
+    if params.my_computer:
+        out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+    else:
+        out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
+    #logging, etc --------------------
+    os.makedirs(out_dir+'/submit/results',  exist_ok=True)
+    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
+
+    log = Logger()
+    log.open(out_dir+'/log.submit.txt',mode='a')
+    log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
+    log.write('** some project setting **\n')
+
+
+    # read names
+    # split_file = CARVANA_DIR +'/split/'+ 'valid_v0_768'
+    # CARVANA_NUM_BLOCKS =1
+
+
+    split_file = CARVANA_DIR +'/split/'+ 'test_100064'
+    with open(split_file) as f:
+        names = f.readlines()
+    names = [name.strip()for name in names]
+    num_test = len(names)
+
+
+    rles=[]
+    num_blocks = int(math.ceil(num_test/CSV_BLOCK_SIZE))
+    print('num_blocks=%d'%num_blocks)
+    for i in range(num_blocks):
+        start = timer()
+        ps   = np.load(out_dir+'/submit/probs-part%02d.8.npy'%i)
+        inds = np.loadtxt(out_dir+'/submit/indices-part%02d.8.txt'%i,dtype=np.int32)
+        log.write('\tnp.load time = %f min\n'%((timer() - start) / 60))
+
+        M = len(ps)
+        for m in range(M):
+            if (m%1000==0):
+                n = len(rles)
+                end  = timer()
+                time = (end - start) / 60
+                time_remain = (num_test-n-1)*time/(n+1)
+                print('rle : b/num_test = %06d/%06d,  time elased (remain) = %0.1f (%0.1f) min'%(n,num_test,time,time_remain))
+            #--------------------------------------------------------
+            p=ps[m]
+            ind=inds[m]
+
+            prob = cv2.resize(p,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)
+            mask = prob>127
+            rle  = run_length_encode(mask)
+            rles.append(rle)
+
+
+            #debug
+            #if 0:
+            '''
+            if m<10 and i==0:
+                name = names[ind]
+                img_file = CARVANA_DIR + '/images/test/%s.jpg'%(name)
+                #img_file = CARVANA_DIR + '/images/train/%s'%(name)
+                image = cv2.imread(img_file)
+                results = make_results_image(image, label=None, prob=prob)
+                im_show('results',results,0.33)
+                im_show('prob',prob,0.33)
+                im_show('p',p,0.33)
+                cv2.waitKey(1)
+            '''
+
+    #-----------------------------------------------------
+    start = timer()
+    names = [name+'.jpg' for name in names]
+
+    dir_name = out_dir.split('/')[-1]
+    gz_file  = out_dir + '/submit/results-%s.csv.gz'%dir_name
+    df = pd.DataFrame({ 'img' : names, 'rle_mask' : rles})
+    df.to_csv(gz_file, index=False, compression='gzip')
+
+    log.write('\tdf.to_csv time = %f min\n'%((timer() - start) / 60)) #3 min
+    log.write('\n')
+
 # ------------------------------------------------------------------------------------
 if __name__ == '__main__':
     print('%s: calling main function ... ' % os.path.basename(__file__))
+
+    #-------------测试 itchat-----------
+    itchat.auto_login()
+    #----------------------------------
 
     opts, args = getopt.getopt(sys.argv[1:], 't', ['s1', 's2'])
 

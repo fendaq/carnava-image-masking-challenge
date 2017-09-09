@@ -236,8 +236,10 @@ class post_prosses_Dataset(Dataset):
         image = image_to_tensor(image)
         mask = label_to_tensor(mask)
 
+        mask = mask.unsqueeze(0)
+
         post_image = torch.cat([image, mask],0)
-        return image, index
+        return post_image, index
 
     def __getitem__(self, index):
         if self.mode=='train': return self.get_post_train_item(index)

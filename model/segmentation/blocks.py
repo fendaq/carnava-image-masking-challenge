@@ -348,7 +348,7 @@ class GCN(nn.Module):
 ##---------------------------------------------------------------
 # see paper figure 4.
 class resnet_GCN(nn.Module):
-    def __init__(self, inplanes, GCN_planes, outplanes, ks=7):
+    def __init__(self, inplanes, GCN_planes, outplanes, ks=15):
         super(resnet_GCN, self).__init__()
         # 先设定planes 是4倍gcn_planes
         self.conv_l1 = nn.Conv2d(inplanes, GCN_planes, kernel_size=(ks, 1),
@@ -442,7 +442,7 @@ class Refine(nn.Module):
 ## for SPP
 class ASPP(nn.Module): #Atrous Spatial Pyramid Pooling
     
-    def __init__(self, inplanes, midplanes, outplanes, dilation_series, padding_series): 
+    def __init__(self, inplanes, midplanes, outplanes, dilation_series = [6,12,18], padding_series = [6,12,18]): 
         super(ASPP, self).__init__()
         self.conv2d_list = nn.ModuleList()
         self.conv2d_list.append(nn.Conv2d(inplanes, midplanes, kernel_size=1))
@@ -477,6 +477,7 @@ class ASPP(nn.Module): #Atrous Spatial Pyramid Pooling
         out3 = self.bn4(out3)
     
         sum = torch.cat([out0,out1,out2,out3],1)
+        sum = self.relu(sum)
 
         out = self.conv(sum)
         out = self.bn(out)
