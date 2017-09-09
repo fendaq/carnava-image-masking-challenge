@@ -154,6 +154,22 @@ class StackEncoder (nn.Module):
         y_small = F.max_pool2d(y, kernel_size=2, stride=2)
         return y, y_small
 
+class StackEncoder_ASPP (nn.Module):
+    def __init__(self, x_channels, y_channels, kernel_size=3):
+        super(StackEncoder_ASPP, self).__init__()
+        padding=(kernel_size-1)//2
+        self.encode = nn.Sequential(
+            ConvBnRelu2d(x_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1, groups=1),
+            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1, groups=1),
+        )
+        self.aspp = ASPP(y_channels, y_channels, y_channels)
+
+    def forward(self,x):
+        y = self.encode(x)
+        y = self.aspp(y)
+        y_small = F.max_pool2d(y, kernel_size=2, stride=2)
+        return y, y_small
+
 
 class StackDecoder (nn.Module):
     def __init__(self, x_big_channels, x_channels, y_channels, kernel_size=3):
@@ -172,6 +188,27 @@ class StackDecoder (nn.Module):
         #y = F.upsample(x, scale_factor=2,mode='bilinear')
         y = torch.cat([y,x_big],1)
         y = self.decode(y)
+        return  y
+
+class StackDecoder_ASPP (nn.Module):
+    def __init__(self, x_big_channels, x_channels, y_channels, kernel_size=3):
+        super(StackDecoder_ASPP, self).__init__()
+        padding=(kernel_size-1)//2
+
+        self.decode = nn.Sequential(
+            ConvBnRelu2d(x_big_channels+x_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1, groups=1),
+            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1, groups=1),
+            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1, groups=1),
+        )
+        self.aspp = ASPP(y_channels, y_channels, y_channels)
+
+    def forward(self, x_big, x):
+        N,C,H,W = x_big.size()
+        y = F.upsample(x, size=(H,W),mode='bilinear')
+        #y = F.upsample(x, scale_factor=2,mode='bilinear')
+        y = torch.cat([y,x_big],1)
+        y = self.decode(y)
+        y = self.aspp(y)
         return  y
 ##---------------------------------------------------------------
 

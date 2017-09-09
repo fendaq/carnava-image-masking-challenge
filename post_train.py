@@ -312,9 +312,10 @@ def run_post_submit1():
         out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     else:
         out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
-    model_file = out_dir +'/snap/047.pth'  #final
-
+    
     out_dir = out_dir + '/post_train'
+
+    model_file = out_dir +'/snap/final.pth'  #final
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)
@@ -333,8 +334,7 @@ def run_post_submit1():
 
     test_dataset = post_prosses_Dataset( 'test_100064',  'test',#100064  #3197
                                  #'valid_v0_768',  'train1024x1024',#100064  #3197
-                                     transform= [
-                                    ],mode='test')
+                                     mode='test')
     test_loader  = DataLoader(
                         test_dataset,
                         sampler     = SequentialSampler(test_dataset),
@@ -366,7 +366,7 @@ def run_post_submit1():
     log.write('\tpredict_in_blocks = %f min\n'%((timer() - start) / 60))
     log.write('\n')
 
-def run_submit2():
+def run_post_submit2():
 
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00c'
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
@@ -374,6 +374,8 @@ def run_submit2():
         out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     else:
         out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
+
+    out_dir = out_dir + '/post_train'
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)
     backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
@@ -442,7 +444,7 @@ def run_submit2():
     start = timer()
     names = [name+'.jpg' for name in names]
 
-    dir_name = out_dir.split('/')[-1]
+    dir_name = out_dir.split('/')[-2]
     gz_file  = out_dir + '/submit/results-%s.csv.gz'%dir_name
     df = pd.DataFrame({ 'img' : names, 'rle_mask' : rles})
     df.to_csv(gz_file, index=False, compression='gzip')
@@ -465,13 +467,13 @@ if __name__ == '__main__':
 
     if opt == '-t':
         run_post_train()
-        '''
+        
     elif opt == '--s1':
-        run_submit1()
+        run_post_submit1()
     elif opt == '--s2':
-        run_submit2()
+        run_post_submit2()
     else:
         print('nothing,stop')
-        '''
+        
 
     print('\nsucess!')
