@@ -170,6 +170,21 @@ class StackEncoder_ASPP (nn.Module):
         y_small = F.max_pool2d(y, kernel_size=2, stride=2)
         return y, y_small
 
+class StackEncoder_GCN (nn.Module):
+    def __init__(self, x_channels, y_channels, kernel_size=3):
+        super(StackEncoder_GCN, self).__init__()
+        padding=(kernel_size-1)//2
+        self.encode = nn.Sequential(
+            ConvBnRelu2d(x_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1, groups=1),
+            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1, groups=1),
+        )
+        self.gcn = resnet_GCN(y_channels, y_channels//4, y_channels)
+
+    def forward(self,x):
+        y = self.encode(x)
+        y = self.gcn(y)
+        y_small = F.max_pool2d(y, kernel_size=2, stride=2)
+        return y, y_small
 
 class StackDecoder (nn.Module):
     def __init__(self, x_big_channels, x_channels, y_channels, kernel_size=3):
