@@ -189,6 +189,9 @@ def run_post_train():
 
     start_lr = get_learning_rate(optimizer)[0]
 
+    if initial_checkpoint is not None:
+        start_lr = start_lr * num_grad_acc
+
     start0 = timer()
     for epoch in range(start_epoch, num_epoches+1):  # loop over the dataset multiple times
 

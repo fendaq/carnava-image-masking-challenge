@@ -228,8 +228,10 @@ if __name__ == '__main__':
 
     CARVANA_HEIGHT = 1280
     CARVANA_WIDTH  = 1918
-    batch_size  = 2
-    C,H,W = 3,512,512    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    batch_size  = 1
+    #C,H,W = 3,512,512    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    #C,H,W = 3,640,960
+    C,H,W = 3,704,1056
 
     if 1: # BCELoss2d()
         num_classes = 1
@@ -239,7 +241,7 @@ if __name__ == '__main__':
 
         #net = FCDenseNet103(in_shape=(C,H,W)).cuda().train()
         #net = FCDenseNet67(in_shape=(C,H,W)).cuda().train()
-        net = my_FCDenseNet(in_shape=(C,H,W)).cuda().train()
+        net = my_FCDenseNet02(in_shape=(C,H,W)).cuda().train()
         print(type(net))
         print(net)
 

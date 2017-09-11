@@ -628,7 +628,8 @@ if __name__ == '__main__':
     #C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
     #C,H,W = 3,512,512
     #C,H,W = 3,640,960
-    C,H,W = 3,768,1152
+    C,H,W = 3,704,1056
+    #C,H,W = 3,768,1152
 
     if 1: # BCELoss2d()
         num_classes = 1

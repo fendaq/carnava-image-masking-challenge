@@ -3,6 +3,8 @@
 # This implementation is a new efficient implementation of Densenet-BC,
 # as described in "Memory-Efficient Implementation of DenseNets"
 
+# 内存占用比bottleneck大，不采用
+
 import os
 import math
 import torch
@@ -74,7 +76,8 @@ class _EfficientDensenetBottleneck(nn.Module):
         self.norm_bias = nn.Parameter(torch.Tensor(num_input_channels))
         self.register_buffer('norm_running_mean', torch.zeros(num_input_channels))
         self.register_buffer('norm_running_var', torch.ones(num_input_channels))
-        self.conv_weight = nn.Parameter(torch.Tensor(num_output_channels, num_input_channels, 1, 1))
+        # self.conv_weight = nn.Parameter(torch.Tensor(num_output_channels, num_input_channels, 1, 1))
+        self.conv_weight = nn.Parameter(torch.Tensor(num_output_channels, num_input_channels, 3, 3))
         self._reset_parameters()
 
 
@@ -92,7 +95,8 @@ class _EfficientDensenetBottleneck(nn.Module):
             inputs = [inputs]
         fn = _EfficientDensenetBottleneckFn(self.shared_allocation_1, self.shared_allocation_2,
             self.norm_running_mean, self.norm_running_var,
-            stride=1, padding=0, dilation=1, groups=1,
+            # stride=1, padding=0, dilation=1, groups=1,
+            stride=1, padding=1, dilation=1, groups=1,
             training=self.training, momentum=0.1, eps=1e-5)
         return fn(self.norm_weight, self.norm_bias, self.conv_weight, *inputs)
 
@@ -104,12 +108,16 @@ class _DenseLayer(nn.Sequential):
         self.shared_allocation_2 = shared_allocation_2
         self.drop_rate = drop_rate
 
+        # self.add_module('bn', _EfficientDensenetBottleneck(shared_allocation_1, shared_allocation_2,
+        #     num_input_features, bn_size * growth_rate))
         self.add_module('bn', _EfficientDensenetBottleneck(shared_allocation_1, shared_allocation_2,
-            num_input_features, bn_size * growth_rate))
+             num_input_features, growth_rate))
+        '''
         self.add_module('norm.2', nn.BatchNorm2d(bn_size * growth_rate)),
         self.add_module('relu.2', nn.ReLU(inplace=True)),
         self.add_module('conv.2', nn.Conv2d(bn_size * growth_rate, growth_rate,
                         kernel_size=3, stride=1, padding=1, bias=False)),
+        '''
 
     def forward(self, x):
         if isinstance(x, Variable):
@@ -611,7 +619,7 @@ def my_FCDenseNet(in_shape, n_classes=1):
 
 def my_FCDenseNet02(in_shape, n_classes=1):
     return FCDenseNet(in_channels=in_shape[0], down_blocks=(3,4,5,7,10),
-                 up_blocks=(10,7,5,4,3), bottleneck_layers=15, bn_size=1,
+                 up_blocks=(10,7,5,4,3), bottleneck_layers=15, bn_size=2,
                  growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
 
 def my_FCDenseNet03(in_shape, n_classes=1):
@@ -628,7 +636,8 @@ if __name__ == '__main__':
     #C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
     #C,H,W = 3,512,512
     #C,H,W = 3,640,960
-    C,H,W = 3,768,1152
+    C,H,W = 3,704,1056
+    #C,H,W = 3,768,1152
 
     if 1: # BCELoss2d()
         num_classes = 1
@@ -637,7 +646,7 @@ if __name__ == '__main__':
         labels = torch.LongTensor(batch_size,H,W).random_(1).type(torch.FloatTensor)
 
         #net = FCDenseNet103(in_shape=(C,H,W)).cuda().train()
-        net = my_FCDenseNet03(in_shape=(C,H,W)).cuda().train()
+        net = my_FCDenseNet02(in_shape=(C,H,W)).cuda().train()
         print(type(net))
         print(net)
 
