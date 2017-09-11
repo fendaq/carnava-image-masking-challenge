@@ -3,6 +3,7 @@
 # This implementation is a new efficient implementation of Densenet-BC,
 # as described in "Memory-Efficient Implementation of DenseNets"
 
+import os
 import math
 import torch
 import torch.nn as nn
@@ -13,6 +14,8 @@ from collections import OrderedDict
 from torch.autograd import Variable, Function
 from torch._thnn import type2backend
 from torch.backends import cudnn
+
+from model.segmentation.loss import *
 
 
 # I'm throwing all the gross code at the end of the file :)
@@ -597,18 +600,23 @@ class _EfficientConv2d(object):
         return grad_weight, grad_bias, grad_input
 
 def FCDenseNet103(in_shape, n_classes=1):
-    return FCDenseNet(in_channels=3, down_blocks=(4,5,7,10,12), 
-                 up_blocks=(12,10,7,5,4), bottleneck_layers=15, 
+    return FCDenseNet(in_channels=in_shape[0], down_blocks=(4,5,7,10,12),
+                 up_blocks=(12,10,7,5,4), bottleneck_layers=15, bn_size=2,
                  growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
 
 def my_FCDenseNet(in_shape, n_classes=1):
-    return FCDenseNet(in_channels=3, down_blocks=(4, 4, 4, 4), 
+    return FCDenseNet(in_channels=in_shape[0], down_blocks=(4, 4, 4, 4),
                  up_blocks=(4, 4, 4, 4), bottleneck_layers=5, 
                  growth_rate=12, out_chans_first_conv=48, n_classes=n_classes)
 
 def my_FCDenseNet02(in_shape, n_classes=1):
-    return FCDenseNet(in_channels=3, down_blocks=(3,4,5,7,10), 
-                 up_blocks=(10,7,5,4,3), bottleneck_layers=15, 
+    return FCDenseNet(in_channels=in_shape[0], down_blocks=(3,4,5,7,10),
+                 up_blocks=(10,7,5,4,3), bottleneck_layers=15, bn_size=1,
+                 growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
+
+def my_FCDenseNet03(in_shape, n_classes=1):
+    return FCDenseNet(in_channels=in_shape[0], down_blocks=(2,3,5,7,10),
+                 up_blocks=(10,7,5,3,2), bottleneck_layers=10, bn_size=1,
                  growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
 # main #################################################################
 if __name__ == '__main__':
@@ -616,8 +624,11 @@ if __name__ == '__main__':
 
     CARVANA_HEIGHT = 1280
     CARVANA_WIDTH  = 1918
-    batch_size  = 2
-    C,H,W = 3,512,512    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    batch_size  = 1
+    #C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    #C,H,W = 3,512,512
+    #C,H,W = 3,640,960
+    C,H,W = 3,768,1152
 
     if 1: # BCELoss2d()
         num_classes = 1
@@ -626,8 +637,7 @@ if __name__ == '__main__':
         labels = torch.LongTensor(batch_size,H,W).random_(1).type(torch.FloatTensor)
 
         #net = FCDenseNet103(in_shape=(C,H,W)).cuda().train()
-        #net = FCDenseNet67(in_shape=(C,H,W)).cuda().train()
-        net = my_FCDenseNet(in_shape=(C,H,W)).cuda().train()
+        net = my_FCDenseNet02(in_shape=(C,H,W)).cuda().train()
         print(type(net))
         print(net)
 
