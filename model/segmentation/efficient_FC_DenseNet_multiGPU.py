@@ -12,6 +12,14 @@ from collections import OrderedDict
 from operator import mul
 from functools import reduce
 
+def center_crop(layer, max_height, max_width):
+    #https://github.com/Lasagne/Lasagne/blob/master/lasagne/layers/merge.py#L162
+    #Author does a center crop which crops both inputs (skip and upsample) to size of minimum dimension on both w/h
+    batch_size, n_channels, layer_height, layer_width = layer.size()
+    xy1 = (layer_width - max_width) // 2
+    xy2 = (layer_height - max_height) // 2
+    return layer[:, :, xy2:(xy2 + max_height), xy1:(xy1 + max_width)]
+
 
 def create_multi_gpu_storage(size=1024):
     multi_storage = []
@@ -173,6 +181,31 @@ class TransitionBlock(nn.Module):
             out = F.dropout(out, p=self.droprate, inplace=False, training=self.training)
         return F.avg_pool2d(out, 2)
 
+class _TransitionDown(nn.Sequential):
+    def __init__(self, num_input_features):
+        super(_TransitionDown, self).__init__()
+        self.add_module('norm', nn.BatchNorm2d(num_input_features))
+        self.add_module('relu', nn.ReLU(inplace=True))
+        self.add_module('conv', nn.Conv2d(num_input_features, num_input_features,
+                                          kernel_size=1, stride=1, bias=True))
+        self.add_module('drop', nn.Dropout2d(0.2))
+        self.add_module('maxpool', nn.MaxPool2d(kernel_size=2, stride=2))
+    
+    def forward(self, x):
+        return super(_TransitionDown, self).forward(x)
+
+class _TransitionUp(nn.Module):
+    def __init__(self, num_input_features, num_output_features):
+        super(_TransitionUp, self).__init__()
+        self.convTrans = nn.ConvTranspose2d(num_input_features, num_output_features,
+                                          kernel_size=3, stride=2, bias=True)
+    
+    def forward(self, x, skip):
+        out = self.convTrans(x)
+        out = center_crop(out, skip.size(2), skip.size(3))
+        out = torch.cat([out, skip], 1)
+        return out
+
 
 class DenseNetEfficientMulti(Module):
     r"""Densenet-BC model class, based on
@@ -234,6 +267,113 @@ class DenseNetEfficientMulti(Module):
         out = self.classifier(out)
         return out
 
+class FCDenseNet_Multi(nn.Module):
+    def __init__(self, in_channels=3, down_blocks=(5,5,5,5,5), up_blocks=(5,5,5,5,5),
+                 bottleneck_layers=5, bn_size=4, drop_rate=0.2,
+                 growth_rate=16, out_chans_first_conv=48, n_classes=1):
+        super(FCDenseNet_Multi, self).__init__()
+        self.down_blocks = down_blocks
+        self.up_blocks = up_blocks
+
+        cur_channels_count = 0
+        skip_connection_channel_counts = []
+
+        #####################
+        # First Convolution #
+        #####################
+
+        self.add_module('firstconv', nn.Conv2d(in_channels=in_channels, 
+                  out_channels=out_chans_first_conv, kernel_size=3, 
+                  stride=1, padding=1, bias=True))
+        cur_channels_count = out_chans_first_conv
+
+        #####################
+        # Downsampling path #
+        #####################
+        storage = create_multi_gpu_storage()
+        
+        self.denseBlocksDown = nn.ModuleList([])
+        self.transDownBlocks = nn.ModuleList([])
+        for i in range(len(down_blocks)):
+            self.denseBlocksDown.append(
+                _DenseBlock(down_blocks[i], cur_channels_count, bn_size, growth_rate, drop_rate, storage))
+            cur_channels_count += (growth_rate*down_blocks[i])
+            skip_connection_channel_counts.insert(0,cur_channels_count)
+            self.transDownBlocks.append(_TransitionDown(cur_channels_count))
+
+        #####################
+        #     Bottleneck    #
+        #####################
+        
+        self.add_module('bottleneck',_DenseBlock(bottleneck_layers, cur_channels_count, 
+                                     bn_size, growth_rate, drop_rate, storage))
+        prev_block_channels = growth_rate*bottleneck_layers
+        cur_channels_count += prev_block_channels 
+
+        #######################
+        #   Upsampling path   #
+        #######################
+
+        self.transUpBlocks = nn.ModuleList([])
+        self.denseBlocksUp = nn.ModuleList([])
+        for i in range(len(up_blocks)):
+            self.transUpBlocks.append(_TransitionUp(cur_channels_count, prev_block_channels))
+            cur_channels_count = prev_block_channels + skip_connection_channel_counts[i]
+
+            self.denseBlocksUp.append(_DenseBlock( up_blocks[i],
+                cur_channels_count, bn_size, growth_rate, drop_rate, storage))
+            prev_block_channels = growth_rate*up_blocks[i]
+            cur_channels_count += prev_block_channels
+
+
+        #####################
+        #      Softmax      #
+        #####################
+
+        self.finalConv = nn.Conv2d(in_channels=cur_channels_count, 
+               out_channels=n_classes, kernel_size=1, stride=1, 
+                   padding=0, bias=True)
+
+    def forward(self, x, is_test=False):
+        
+        if is_test:    
+            print("INPUT",x.size())
+        
+        out = self.firstconv(x)
+        
+        skip_connections = []
+        for i in range(len(self.down_blocks)):
+
+            if is_test:
+                print("DBD size",out.size())
+            
+            out = self.denseBlocksDown[i](out)
+            skip_connections.append(out)
+            out = self.transDownBlocks[i](out)
+
+        if is_test:
+            print("DBD size", out.size())
+            
+        out = self.bottleneck(out)
+
+        if is_test:
+            print ("bnecksize",out.size())
+        
+        for i in range(len(self.up_blocks)):
+            skip = skip_connections.pop()
+            if is_test:
+                print("DOWN_SKIP_PRE_UPSAMPLE",out.size(),skip.size())
+            out = self.transUpBlocks[i](out, skip)
+            if is_test:
+                print("DOWN_SKIP_AFT_UPSAMPLE",out.size(),skip.size())
+            out = self.denseBlocksUp[i](out)
+        if is_test:
+            print("after up", out.size(), skip.size())  
+
+        out = self.finalConv(out)
+        out = torch.squeeze(out, dim=1)
+        
+        return out
 
 # Begin gross code :/
 # Here's where we define the internals of the efficient bottleneck layer
@@ -494,3 +634,58 @@ class _EfficientDensenetBottleneckFn(Function):
         self.efficient_batch_norm.running_var.copy_(self.curr_running_var)
 
         return tuple([bn_weight_grad, bn_bias_grad, conv_weight_grad] + list(grad_inputs))
+
+def FCDenseNet103(in_shape, n_classes=1):
+    return FCDenseNet(in_channels=in_shape[0], down_blocks=(4,5,7,10,12),
+                 up_blocks=(12,10,7,5,4), bottleneck_layers=15, bn_size=2,
+                 growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
+
+def my_FCDenseNet(in_shape, n_classes=1):
+    return FCDenseNet(in_channels=in_shape[0], down_blocks=(4, 4, 4, 4),
+                 up_blocks=(4, 4, 4, 4), bottleneck_layers=5, 
+                 growth_rate=12, out_chans_first_conv=48, n_classes=n_classes)
+
+def my_FCDenseNet02(in_shape, n_classes=1):
+    return FCDenseNet(in_channels=in_shape[0], down_blocks=(3,4,5,7,10),
+                 up_blocks=(10,7,5,4,3), bottleneck_layers=15, bn_size=1,
+                 growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
+
+def my_FCDenseNet03(in_shape, n_classes=1):
+    return FCDenseNet(in_channels=in_shape[0], down_blocks=(2,3,5,7,10),
+                 up_blocks=(10,7,5,3,2), bottleneck_layers=10, bn_size=1,
+                 growth_rate=16, out_chans_first_conv=48, n_classes=n_classes)
+# main #################################################################
+if __name__ == '__main__':
+    print( '%s: calling main function ... ' % os.path.basename(__file__))
+
+    CARVANA_HEIGHT = 1280
+    CARVANA_WIDTH  = 1918
+    batch_size  = 1
+    #C,H,W = 3,1024,1024    #3,CARVANA_HEIGHT,CARVANA_WIDTH
+    #C,H,W = 3,512,512
+    #C,H,W = 3,640,960
+    C,H,W = 3,704,1056
+    #C,H,W = 3,768,1152
+
+    if 1: # BCELoss2d()
+        num_classes = 1
+
+        inputs = torch.randn(batch_size,C,H,W)
+        labels = torch.LongTensor(batch_size,H,W).random_(1).type(torch.FloatTensor)
+
+        #net = FCDenseNet103(in_shape=(C,H,W)).cuda().train()
+        net = my_FCDenseNet02(in_shape=(C,H,W)).cuda().train()
+        print(type(net))
+        print(net)
+
+        x = Variable(inputs.cuda())
+        y = Variable(labels.cuda())
+        logits = net.forward(x,is_test=True)
+        print(logits.size())
+
+        loss = BCELoss2d()(logits, y)
+        loss.backward()
+
+        print('logits')
+        print(logits)
+    #input('Press ENTER to continue.')

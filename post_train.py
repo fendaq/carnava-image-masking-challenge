@@ -52,9 +52,9 @@ def run_post_train():
 
 
     ## dataset ----------------------------------------
-    def train_augment(image,label):
-        #image, label = random_horizontal_flipN([image, label])
-        image, label = random_shift_scale_rotateN([image, label], shift_limit=(-0.0625,0.0625),
+    def train_augment(image,mask,label):
+        image, mask, label = random_horizontal_flipN([image, mask, label])
+        image, mask, label = random_shift_scale_rotateN([image, mask, label], shift_limit=(-0.0625,0.0625),
                   scale_limit=(0.91,1.21), rotate_limit=(-0,0))
 
         #image, label = random_mask_hue(image, label, hue_limit=(-1,1), u=0.5)
@@ -65,7 +65,7 @@ def run_post_train():
         # image = random_saturation(image, limit=(-0.3,0.3), u=0.5)
         # image = random_gray(image, u=0.25)
 
-        return  image, label
+        return  image, mask, label
 
     ## ----------------------------------------------------
 
@@ -81,7 +81,7 @@ def run_post_train():
                                    'train',
                                    #'train128x128', ## 1024x1024 ##
                                    #'test_100064', 'test1024x1024',
-                                   #transform = [ lambda x,y:train_augment(x,y), ],
+                                   transform = [ lambda x,y,z:train_augment(x,y,z), ],
                                    mode='train')
     train_loader  = DataLoader(
                         train_dataset,
@@ -463,13 +463,16 @@ if __name__ == '__main__':
     itchat.auto_login()
     #----------------------------------
 
-    opts, args = getopt.getopt(sys.argv[1:], 't', ['s1', 's2'])
+    opts, args = getopt.getopt(sys.argv[1:], 'ts', ['s1', 's2'])
 
     for opt, val in opts:
         print(opt)
 
     if opt == '-t':
         run_post_train()
+    elif opt == '-s':
+        run_post_submit1()
+        run_post_submit2()
         
     elif opt == '--s1':
         run_post_submit1()

@@ -248,7 +248,7 @@ def run_train():
 
     ## dataset ----------------------------------------
     def train_augment(image,label):
-        #image, label = random_horizontal_flipN([image, label])
+        image, label = random_horizontal_flipN([image, label])
         image, label = random_shift_scale_rotateN([image, label], shift_limit=(-0.0625,0.0625),
                   scale_limit=(0.91,1.21), rotate_limit=(-0,0))
 
@@ -312,7 +312,11 @@ def run_train():
 
     #net = Net(in_shape=(3, 128, 128))
     net = Net(in_shape=(3, params.input_size, params.input_size))
-    net.cuda()
+    
+    if torch.cuda.device_count() > 1: 
+        net = torch.nn.DataParallel(net).cuda()
+    else:
+        net.cuda()
 
     log.write('%s\n\n'%(type(net)))
     log.write('%s\n\n'%(str(net)))

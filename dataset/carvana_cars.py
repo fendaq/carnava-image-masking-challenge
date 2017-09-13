@@ -144,7 +144,7 @@ class KgCarDataset(Dataset):
 
 class post_prosses_Dataset(Dataset):
 
-    def __init__(self, split, folder, mode='train'):
+    def __init__(self, split, folder, transform=[], mode='train'):
         super(post_prosses_Dataset, self).__init__()
 
         # read names
@@ -161,7 +161,7 @@ class post_prosses_Dataset(Dataset):
         self.df        = df
         self.split     = split
         self.folder    = folder
-        #self.transform = transform
+        self.transform = transform
 
         self.mode      = mode
         self.names     = names
@@ -218,6 +218,9 @@ class post_prosses_Dataset(Dataset):
         image = self.get_image(index)
         mask = self.get_mask(index)
         label = self.get_label(index)
+
+        for t in self.transform:
+            image,mask,label = t(image,mask,label)
 
         image = image_to_tensor(image)
         mask = label_to_tensor(mask)
