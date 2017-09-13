@@ -318,7 +318,7 @@ def run_post_submit1():
     
     out_dir = out_dir + '/post_train'
 
-    model_file = out_dir +'/snap/final.pth'  #final
+    model_file = out_dir +'/snap/040.pth'  #final
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)

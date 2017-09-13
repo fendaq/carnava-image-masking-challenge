@@ -11,7 +11,7 @@ from model.segmentation.unet_variant import UNet1024_dropout,\
 from model.segmentation.LKM import LKM,LKM_02
 from model.segmentation.FC_DenseNet import my_FCDenseNet,my_FCDenseNet02,FCDenseNet103
 
-my_computer  = False
+my_computer  = True
 
 input_size = 1024
 
@@ -47,7 +47,7 @@ orig_height = 1280
 #single model train
 #model_factory = UNet1024;   save_path = 'unet_double_1024_baseline_adam'
 #model_factory = UNet1024;   save_path = 'unet_double_1024_baseline_1280'
-#model_factory = UNet1024;   save_path = 'unet_double_1024_baseline_flip'
+model_factory = UNet1024;   save_path = 'unet_double_1024_baseline_flip'
 #model_factory = UNet1024_dropout; save_path = 'UNet1024_dropout'
 
 #model_factory = UNet1024_ASPP; save_path = 'unet1024_ASPP'
@@ -58,7 +58,7 @@ orig_height = 1280
 
 #model_factory = UNet1024_GCN; save_path = 'UNet1024_GCN'
 #model_factory = UNet1024_GCN_k15_04;   save_path = 'UNet1024_GCN_k15_04'
-model_factory = UNet1024_GCN_k15_05; save_path = 'UNet1024_GCN_k15_05'
+#model_factory = UNet1024_GCN_k15_05; save_path = 'UNet1024_GCN_k15_05'
 
 #model_factory = LKM; save_path = 'LKM_152'
 #model_factory = LKM; save_path = 'LKM_152_k15'
