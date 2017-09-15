@@ -15,7 +15,7 @@ import itchat
 
 Net = params.post_model
 
-CSV_BLOCK_SIZE = 10000
+CSV_BLOCK_SIZE = 8000
 
 # ------------------------------------------------------------------------------------
 def run_post_train():
@@ -460,7 +460,7 @@ if __name__ == '__main__':
     print('%s: calling main function ... ' % os.path.basename(__file__))
 
     #-------------测试 itchat-----------
-    itchat.auto_login()
+    #itchat.auto_login()
     #----------------------------------
 
     opts, args = getopt.getopt(sys.argv[1:], 'ts', ['s1', 's2'])

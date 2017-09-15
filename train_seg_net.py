@@ -18,7 +18,7 @@ Net = params.model_factory
 #  ffmpeg -y -loglevel 0 -f image2 -r 15 -i 'xxxxx/%*.jpg' -b:v 8000k xxxxx.avi
 #  ffmpeg -i results.avi -vf scale=300:100 -b:v 8000k results-small.avi
 
-CSV_BLOCK_SIZE = 10000
+CSV_BLOCK_SIZE = params.npy_BLOCK_SIZE
 
 
 
@@ -220,7 +220,8 @@ def run_train():
     else:
         out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
 
-    initial_checkpoint = None
+    if params.init_checkpoint is not None:
+        initial_checkpoint = out_dir + '/checkpoint/' + params.init_checkpoint 
         #'/root/share/project/kaggle-carvana-cars/results/single/UNet128-00-xxx/checkpoint/006.pth'
 
 
@@ -338,9 +339,10 @@ def run_train():
     epoch_save  = list(range(0,num_epoches+1))
     #LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (42, -1),(44, -1)])
     if params.optimer == 'SGD':
-        LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (45, 0.0002),(55, -1)])
+        # LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (45, 0.0002),(55, -1)])
+        LR = StepLR(params.LR_sgd)
     if params.optimer == 'Adam':
-        LR = StepLR([ (0, 0.001),  (35, 0.0005),  (55, -1)])
+        LR = StepLR(params.LR_adam)
 
     #https://github.com/EKami/carvana-challenge/blob/7d20494f40b39686c25159403e2a27a82f4096a9/src/nn/classifier.py
     lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.2, patience=4, verbose=True, min_lr=1e-7)
@@ -350,6 +352,7 @@ def run_train():
 
     ## resume from previous ------------------------
     log.write('\ninitial_checkpoint=%s\n\n'%initial_checkpoint)
+    log.write('%s\n\n'%(type(net)))
 
     start_epoch=0
     if initial_checkpoint is not None:
@@ -365,8 +368,11 @@ def run_train():
     log.write(' num_grad_acc x batch_size = %d x %d=%d\n'%(num_grad_acc,batch_size,num_grad_acc*batch_size))
     log.write(' input_size = %d x %d\n'%(params.input_size,params.input_size) )
     log.write(' optimizer=%s\n'%str(optimizer) )
-    log.write(' is_ReduceLRonPlateau: %s\n'%str(params.using_ReduceLROnPlateau))
-    log.write(' LR=%s\n\n'%str(LR) )
+    if params.using_ReduceLROnPlateau is True:
+        log.write(' is_ReduceLRonPlateau: %s\n'%str(lr_scheduler))
+        log.write(' ReduceLRonPlateau_factor: %d\n'%lr_scheduler.factor)
+    else:
+        log.write(' LR=%s\n\n'%str(LR) )
     log.write('\n')
 
 
@@ -511,7 +517,8 @@ def run_valid():
         out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     else:
         out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
-    model_file = out_dir +'/snap/final.pth'  #final
+    # model_file = out_dir +'/snap/final.pth'  #final
+    model_file = out_dir + '/snap/' + params.model_snap
 
     is_results      = True
     is_full_results = True  #True
@@ -651,7 +658,8 @@ def run_submit1():
         out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     else:
         out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
-    model_file = out_dir +'/snap/047.pth'  #final
+    # model_file = out_dir +'/snap/060.pth'  #final
+    model_file = out_dir + '/snap/' + params.model_snap
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)
@@ -713,7 +721,8 @@ def save_origin_mask(): #保存预测的原始mask图片
         out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     else:
         out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
-    model_file = out_dir +'/snap/047.pth'  #final
+    # model_file = out_dir +'/snap/047.pth'  #final
+    model_file = out_dir + '/snap/' + params.model_snap
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/out_mask/results',  exist_ok=True)
@@ -912,7 +921,7 @@ def run_submit2():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    opts, args = getopt.getopt(sys.argv[1:], 'tvs', ['s1','s2'])
+    opts, args = getopt.getopt(sys.argv[1:], 'tvms', ['s1','s2'])
     
     for opt, val in opts: 
         print(opt)
@@ -921,8 +930,11 @@ if __name__ == '__main__':
         run_train()
     elif opt =='-v':  
         run_valid()
-    elif opt =='-s':  
+    elif opt =='-m':  
         save_origin_mask()
+    elif opt =='-s':  
+        run_submit1()
+        run_submit2()
     elif opt =='--s1':
         run_submit1()
     elif opt =='--s2':
