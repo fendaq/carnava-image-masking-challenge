@@ -10,12 +10,12 @@ from model.segmentation.loss import *
 from model.segmentation.blocks import *
 
 #-------------测试 itchat-----------
-import itchat
+#import itchat
 #----------------------------------
 
 Net = params.post_model
 
-CSV_BLOCK_SIZE = 8000
+CSV_BLOCK_SIZE = params.npy_BLOCK_SIZE
 
 # ------------------------------------------------------------------------------------
 def run_post_train():
@@ -126,12 +126,14 @@ def run_post_train():
     log.write('%s\n\n'%(inspect.getsource(net.forward )))
 
     ## optimiser ----------------------------------
-    if params.optimer == 'SGD':
+    if params.post_optimer == 'SGD':
         optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
     #optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)
-    if params.optimer == 'Adam':
+    if params.post_optimer == 'Adam':
         optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
                  weight_decay=0)
+        #optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
+        #         weight_decay=0.0005)
 
     num_epoches = 150  #100
     it_print    = 1    #20
@@ -139,9 +141,9 @@ def run_post_train():
     epoch_valid = list(range(0,num_epoches+1))
     epoch_save  = list(range(0,num_epoches+1))
     #LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (42, -1),(44, -1)])
-    if params.optimer == 'SGD':
+    if params.post_optimer == 'SGD':
         LR = StepLR([ (0, 0.01),  (35, 0.005),  (40,0.001),  (45, 0.0002),(55, -1)])
-    if params.optimer == 'Adam':
+    if params.post_optimer == 'Adam':
         LR = StepLR([ (0, 0.001),  (35, 0.0005),  (55, -1)])
 
     #https://github.com/EKami/carvana-challenge/blob/7d20494f40b39686c25159403e2a27a82f4096a9/src/nn/classifier.py
@@ -152,6 +154,7 @@ def run_post_train():
 
     ## resume from previous ------------------------
     log.write('\ninitial_checkpoint=%s\n\n'%initial_checkpoint)
+    log.write('%s\n\n'%(type(net)))
 
     start_epoch=0
     if initial_checkpoint is not None:
@@ -167,8 +170,11 @@ def run_post_train():
     log.write(' num_grad_acc x batch_size = %d x %d=%d\n'%(num_grad_acc,batch_size,num_grad_acc*batch_size))
     log.write(' input_size = %d x %d\n'%(params.input_size,params.input_size) )
     log.write(' optimizer=%s\n'%str(optimizer) )
-    log.write(' is_ReduceLRonPlateau: %s\n'%str(params.using_ReduceLROnPlateau))
-    log.write(' LR=%s\n\n'%str(LR) )
+    if params.post_using_ReduceLROnPlateau is True:
+        log.write(' is_ReduceLRonPlateau: %s\n'%str(params.post_using_ReduceLROnPlateau))
+        log.write(' ReduceLRonPlateau_factor: %0.3f\n'%lr_scheduler.factor)
+    else:
+        log.write(' LR=%s\n\n'%str(LR) )
     log.write('\n')
 
 
@@ -195,9 +201,9 @@ def run_post_train():
     start0 = timer()
     for epoch in range(start_epoch, num_epoches+1):  # loop over the dataset multiple times
 
-        if epoch > params.max_epochs: break
+        if epoch > params.max_post_train_epochs: break
         #---learning rate schduler ------------------------------
-        if params.using_ReduceLROnPlateau == True:
+        if params.post_using_ReduceLROnPlateau == True:
             adjust_learning_rate(optimizer, start_lr/num_grad_acc)
             lr_scheduler.step(valid_loss)
             rate = get_learning_rate(optimizer)[0]*num_grad_acc #check
@@ -220,9 +226,9 @@ def run_post_train():
                     (epoch, num_its, rate, valid_loss, valid_acc, train_loss, train_acc, batch_loss, batch_acc, time))
 
             #-------------测试 itchat-----------
-            str_epoch = str(epoch)
-            str_valid_acc = str(valid_acc)
-            itchat.send('epoch is '+ str_epoch + ' and ' + ' valid_acc is ' + str_valid_acc, toUserName='filehelper')
+            # str_epoch = str(epoch)
+            # str_valid_acc = str(valid_acc)
+            # itchat.send('epoch is '+ str_epoch + ' and ' + ' valid_acc is ' + str_valid_acc, toUserName='filehelper')
             #----------------------------------
 
         #if 1:
@@ -318,7 +324,8 @@ def run_post_submit1():
     
     out_dir = out_dir + '/post_train'
 
-    model_file = out_dir +'/snap/040.pth'  #final
+    # model_file = out_dir +'/snap/040.pth'  #final
+    model_file = out_dir +'/snap/' + params.post_submit_snap
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)

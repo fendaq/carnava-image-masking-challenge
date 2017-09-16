@@ -321,8 +321,9 @@ def run_train():
 
     log.write('%s\n\n'%(type(net)))
     log.write('%s\n\n'%(str(net)))
-    log.write('%s\n\n'%(inspect.getsource(net.__init__)))
-    log.write('%s\n\n'%(inspect.getsource(net.forward )))
+    if initial_checkpoint is None:
+        log.write('%s\n\n'%(inspect.getsource(net.__init__)))
+        log.write('%s\n\n'%(inspect.getsource(net.forward )))
 
     ## optimiser ----------------------------------
     if params.optimer == 'SGD':
@@ -330,7 +331,9 @@ def run_train():
     #optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)
     if params.optimer == 'Adam':
         optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
-                 weight_decay=0)
+                 weight_decay=0.0005)
+        # optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
+        #         weight_decay=0)       
 
     num_epoches = 150  #100
     it_print    = 1    #20
@@ -370,7 +373,7 @@ def run_train():
     log.write(' optimizer=%s\n'%str(optimizer) )
     if params.using_ReduceLROnPlateau is True:
         log.write(' is_ReduceLRonPlateau: %s\n'%str(lr_scheduler))
-        log.write(' ReduceLRonPlateau_factor: %d\n'%lr_scheduler.factor)
+        log.write(' ReduceLRonPlateau_factor: %0.3f\n'%lr_scheduler.factor)
     else:
         log.write(' LR=%s\n\n'%str(LR) )
     log.write('\n')

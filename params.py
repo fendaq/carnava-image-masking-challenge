@@ -20,8 +20,8 @@ orig_width = 1918
 orig_height = 1280
 
 #-----------------------------------------------
-# run_valid() run_submit1() save_origin_mask()
-npy_BLOCK_SIZE = 8000
+# train_seg: run_valid() run_submit1() save_origin_mask()
+npy_BLOCK_SIZE = 8000 #both for train_seg and post_train
 model_snap = 'final.pth'
 
 # save_origin_mask()
@@ -38,8 +38,9 @@ max_post_train_epochs = 50
 post_optimer = 'Adam'
 post_using_ReduceLROnPlateau = True
 
-real_post_batch_size = 15
-step_post_batch_size = 3
+#real_post_batch_size = 15
+#step_post_batch_size = 3
+post_submit_snap = 'final.pth'
 
 post_model = UNet1024_post_train_01
 #------------------------------------------------
