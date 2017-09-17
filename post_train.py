@@ -25,7 +25,11 @@ def run_post_train():
     else:
         out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
 
-    initial_checkpoint = None
+    #initial_checkpoint = None
+    if params.init_post is not None:
+        initial_checkpoint = out_dir + '/post_train/checkpoint/' + params.init_post
+    else:
+        initial_checkpoint = None
         #'/root/share/project/kaggle-carvana-cars/results/single/UNet128-00-xxx/checkpoint/006.pth'
 
 
@@ -121,9 +125,10 @@ def run_post_train():
     net.cuda()
 
     log.write('%s\n\n'%(type(net)))
-    log.write('%s\n\n'%(str(net)))
-    log.write('%s\n\n'%(inspect.getsource(net.__init__)))
-    log.write('%s\n\n'%(inspect.getsource(net.forward )))
+    if initial_checkpoint is None:
+        log.write('%s\n\n'%(str(net)))
+        log.write('%s\n\n'%(inspect.getsource(net.__init__)))
+        log.write('%s\n\n'%(inspect.getsource(net.forward )))
 
     ## optimiser ----------------------------------
     if params.post_optimer == 'SGD':

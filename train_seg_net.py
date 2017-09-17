@@ -222,6 +222,8 @@ def run_train():
 
     if params.init_checkpoint is not None:
         initial_checkpoint = out_dir + '/checkpoint/' + params.init_checkpoint 
+    else:
+        initial_checkpoint = None
         #'/root/share/project/kaggle-carvana-cars/results/single/UNet128-00-xxx/checkpoint/006.pth'
 
 
@@ -320,8 +322,8 @@ def run_train():
         net.cuda()
 
     log.write('%s\n\n'%(type(net)))
-    log.write('%s\n\n'%(str(net)))
     if initial_checkpoint is None:
+        log.write('%s\n\n'%(str(net)))
         log.write('%s\n\n'%(inspect.getsource(net.__init__)))
         log.write('%s\n\n'%(inspect.getsource(net.forward )))
 
@@ -331,9 +333,9 @@ def run_train():
     #optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=0.01, momentum=0.9, weight_decay=0.0005)
     if params.optimer == 'Adam':
         optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
-                 weight_decay=0.0005)
+                 weight_decay=0)
         # optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-8,
-        #         weight_decay=0)       
+        #         weight_decay=0.0005)       
 
     num_epoches = 150  #100
     it_print    = 1    #20
@@ -788,18 +790,24 @@ def save_origin_mask(): #保存预测的原始mask图片
 
     if is_merge_bn: merge_bn_in_net(net)
     ## start testing now #####
-    log.write('start prediction ...\n')
+    log.write('start saving masks ...\n')
     start = timer()
 
     net.eval()
     # probs = predict8_in_blocks( net, test_loader, block_size=CSV_BLOCK_SIZE, save_dir=out_dir+'/submit',log=log)           # 20 min
 
-    time_taken =0
-    end  =0
+    time_taken = 0
+    end = 0
+    num = 0
+
+    test_num = len(test_loader)
+
     for it, (images, indices) in enumerate(test_loader, 0):
         images  = Variable(images,volatile=True).cuda()
         #labels  = Variable(labels).cuda().half()
         batch_size = len(indices)
+
+        num = num + batch_size
 
         #forward
         t0 =  timer()
@@ -807,9 +815,9 @@ def save_origin_mask(): #保存预测的原始mask图片
         probs  = F.sigmoid(logits)
 
         #warm start
-        if it>10:
-            time_taken = time_taken + timer() - t0
-            #print(time_taken)
+        #if it>10:
+        #    time_taken = time_taken + timer() - t0
+        #    print(time_taken)
 
         #a = dice_loss((probs.float()>0.5).float(), labels.float(), is_average=False)
         #accs[start:start + batch_size]=a.data.cpu().numpy()
@@ -829,10 +837,15 @@ def save_origin_mask(): #保存预测的原始mask图片
                 cv2.imwrite(out_dir+'/out_mask/train_mask/%s.png'%(name), prob)
 
         pass ######################
-        start = start + batch_size
+        #start = start + batch_size
+        print('it: %d, num: %d'%(it,num), end=' ', flush=True)
+        if num%1000 == 0:
+            log.write(' [it: %d, num: %d] \n'%(it,num))
+            log.write('\t time = %0.2f min \n'%((timer() - start)/60))
     
-    log.write('\tpredict_in_blocks = %f min\n'%((timer() - start) / 60))
+    log.write(' save_masks = %f min\n'%((timer() - start) / 60))
     log.write('\n')
+    assert(num == test_num)
 
 def run_submit2():
 

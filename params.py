@@ -2,6 +2,7 @@ from model.segmentation.SegNet import segnet_vgg
 from model.segmentation.my_unet_baseline import UNet1024, UNet128
 from model.segmentation.unet_variant import UNet1024_dropout,\
                         UNet1024_post_train,UNet1024_post_train_01, \
+                        UNet1024_post_train_02, \
                         UNet1024_GCN_baseline,UNet1024_GCN_k15, \
                         UNet1024_GCN_k15_02,UNet1024_GCN_k15_03, \
                         UNet1024_GCN_k15_04,UNet1024_GCN_k15_05, \
@@ -22,17 +23,18 @@ orig_height = 1280
 #-----------------------------------------------
 # train_seg: run_valid() run_submit1() save_origin_mask()
 npy_BLOCK_SIZE = 8000 #both for train_seg and post_train
-model_snap = 'final.pth'
+model_snap = None#'060.pth'
 
 # save_origin_mask()
-save_test = True # 'False' means save train images
+save_test = False # 'False' means save train images
 save_full_resolution_mask = False
 
 #-------carvana_cars.py--------------
 post_prosses = False # 'True' return origin sizes, 'False' return input_size
 
 #-------post_train.py----------------
-max_post_train_epochs = 50
+max_post_train_epochs = 65
+init_post = '050.pth'
 
 #post_optimer = 'SGD'
 post_optimer = 'Adam'
@@ -42,7 +44,7 @@ post_using_ReduceLROnPlateau = True
 #step_post_batch_size = 3
 post_submit_snap = 'final.pth'
 
-post_model = UNet1024_post_train_01
+post_model = UNet1024_post_train_02
 #------------------------------------------------
 
 #-------train_seg_net.py-------------
@@ -66,7 +68,7 @@ step_batch_size = 3
 
 # threshold = 0.5
 
-#model_factory = UNet1024_GCN_k15_04;   save_path = 'test'
+model_factory = UNet1024_GCN_k15_06;   save_path = 'test'
 
 #single model train
 #model_factory = UNet1024;   save_path = 'unet_double_1024_baseline_adam'
@@ -80,7 +82,7 @@ step_batch_size = 3
 #model_factory = UNet1024_ASPP_03;   save_path = 'UNet1024_ASPP_03'
 #model_factory = UNet1024_ASPP_04; save_path = 'UNet1024_ASPP_04'
 #model_factory = UNet1024_ASPP_07; save_path = 'UNet1024_ASPP_07'
-model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08'
+#model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08'
 
 #model_factory = UNet1024_GCN; save_path = 'UNet1024_GCN'
 #model_factory = UNet1024_GCN_k15_04;   save_path = 'UNet1024_GCN_k15_04'
