@@ -340,6 +340,7 @@ def run_post_submit1():
     log.open(out_dir+'/log.submit.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
+    log.write('* model_file=%s\n' % model_file)
 
 
 

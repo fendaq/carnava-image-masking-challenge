@@ -33,6 +33,7 @@ def criterion(logits, labels, is_weight=True):
     if   H == 128:  kernel_size =11
     elif H == 256:  kernel_size =21
     elif H == 512:  kernel_size =21
+    elif H == 960:  kernel_size =39
     elif H == 1024: kernel_size =41 #41
     elif H == 1280: kernel_size =51 #41
     else: raise ValueError('exit at criterion()')
@@ -314,7 +315,7 @@ def run_train():
     log.write('** net setting **\n')
 
     #net = Net(in_shape=(3, 128, 128))
-    net = Net(in_shape=(3, params.input_size, params.input_size))
+    net = Net(in_shape=(3, params.input_h, params.input_w))
     
     if torch.cuda.device_count() > 1: 
         net = torch.nn.DataParallel(net).cuda()
@@ -371,7 +372,8 @@ def run_train():
     #training ####################################################################3
     log.write('** start training here! **\n')
     log.write(' num_grad_acc x batch_size = %d x %d=%d\n'%(num_grad_acc,batch_size,num_grad_acc*batch_size))
-    log.write(' input_size = %d x %d\n'%(params.input_size,params.input_size) )
+    #log.write(' input_size = %d x %d\n'%(params.input_size,params.input_size) )
+    log.write(' input_size = %d x %d\n'%(params.input_w,params.input_h) )
     log.write(' optimizer=%s\n'%str(optimizer) )
     if params.using_ReduceLROnPlateau is True:
         log.write(' is_ReduceLRonPlateau: %s\n'%str(lr_scheduler))
@@ -545,6 +547,7 @@ def run_valid():
     log.write('\tSEED    = %u\n' % SEED)
     log.write('\tfile    = %s\n' % __file__)
     log.write('\tout_dir = %s\n' % out_dir)
+    log.write(' model_file=%s\n' % model_file)
     log.write('\n')
 
 
@@ -674,6 +677,7 @@ def run_submit1():
     log.open(out_dir+'/log.submit.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
+    log.write('* model_file=%s\n' % model_file)
 
 
 
@@ -739,6 +743,7 @@ def save_origin_mask(): #保存预测的原始mask图片
     log.open(out_dir+'/log.make_mask.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
+    log.write('* model_file=%s\n' % model_file)
 
 
 

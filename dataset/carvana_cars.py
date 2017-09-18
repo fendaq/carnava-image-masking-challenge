@@ -19,8 +19,8 @@ CARVANA_NUM_VIEWS = 16
 CARVANA_HEIGHT = 1280
 CARVANA_WIDTH  = 1918
 
-CARVANA_H = params.input_size
-CARVANA_W = params.input_size
+CARVANA_H = params.input_h
+CARVANA_W = params.input_w
 
 #debug and show
 def make_results_image(image, label, prob=None, label_color=2, prob_color=1):

@@ -10,7 +10,8 @@ def try_pytorch_upsample_error():
 
 
     H,W = CARVANA_HEIGHT, CARVANA_WIDTH
-    H_small,W_small = 512,512
+    #H_small,W_small = 768,1152
+    H_small,W_small = 960,1408
 
     mask_dir = CARVANA_DIR + '/annotations/train'  # read all annotations
     img_list = sorted(glob.glob(mask_dir + '/*.png'))
@@ -46,6 +47,7 @@ def try_pytorch_upsample_error():
         predicts     = F.upsample(labels_small, size=(H,W),mode='bilinear')
         print(labels_small.size())
         predicts     = (predicts>0.5).float()
+        print(predicts.size())
 
         a = DiceAccuracy()(predicts,labels)
         acc += a.data[0]*B
@@ -65,6 +67,8 @@ def try_pytorch_upsample_error():
                 #0.997947031995223 for 512,512
                 #0.9985188766845368 for 640,960
                 #0.9990896366817771 for 1024,1024
+                #0.9990786538933808 for 896,1344
+                #0.9992261225322507 for 960,1440
                 #0.9994954431675515 for 1280,1280
                 #0.9985991331672518 for half resolution
 
