@@ -40,35 +40,86 @@ def split_train_valid_list(K_version):
     shortnames = [x.replace('train/','')[:-3] for x in names]
     ids = list(set(shortnames))
 
+    random.shuffle(ids)
+
     num_ids = len(ids)
     print(num_ids) #318
     
     if K_version==1:
-        num_valid=48  #(15%)
-        num_train=num_ids-num_valid
-        print(num_valid,num_train) #48,270
+        for i in range(1,6):           
+            if i==5:
+                num_valid = 48 #1088
+                num_train = num_ids-num_valid
+                print(num_valid,num_train) #48,270
 
-        random.shuffle(ids)
+                ids1 = ids[0:num_train]
+                ids2 = ids[num_train: ]
+            elif i==4:
+                num_valid = 66
+                num_train = num_ids-num_valid
 
-        #make train, valid
-        file1 = CARVANA_DIR +'/split/'+ 'train_v%d_%d'%(K_version,num_train*CARVANA_NUM_VIEWS)
-        file2 = CARVANA_DIR +'/split/'+ 'valid_v%d_%d'%(K_version,num_valid*CARVANA_NUM_VIEWS)
-        ids1 = ids[0:num_train]
-        ids2 = ids[num_train: ]
+                ids1 = ids[0:68*3] + ids[-48:]
+                ids2 = ids[68*3:68*3+num_valid]
+                
+                assert(len(ids2)==num_valid)
+                assert(len(ids1)==num_train)
+                print(len(ids2),len(ids1)) #66,48+68*3=252
+            else:
+                num_valid = 68
+                num_train = num_ids-num_valid
 
-        for pair  in [(file1,ids1),(file2,ids2)]:
-            file = pair[0]
-            ids  = pair[1]
+                ids1 = ids[0:68*(i-1)] + ids[-(66 + 48)+ (i-3)*68:]
+                ids2 = ids[68*(i-1):68*i]
 
-            with open(file,'w') as f:
-                for id in ids:
-                    for v in range(1,CARVANA_NUM_VIEWS+1):
-                        #f.write('train/%s_%02d\n'%(id,v))
-                        f.write('%s_%02d\n'%(id,v))
-        xx=0
+                assert(len(ids2)==num_valid)
+                assert(len(ids1)==num_train)
+                print(len(ids2),len(ids1)) 
+            #make train, valid
+            file1 = CARVANA_DIR +'/split/'+ 'train_v%d_k%d'%(K_version,i)
+            file2 = CARVANA_DIR +'/split/'+ 'valid_v%d_k%d'%(K_version,i)
+            for pair  in [(file1,ids1),(file2,ids2)]:
+                file = pair[0]
+                ids_temp  = pair[1]
+
+                with open(file,'w') as f:
+                    for id in ids_temp:
+                        for v in range(1,CARVANA_NUM_VIEWS+1):
+                            #f.write('train/%s_%02d\n'%(id,v))
+                            f.write('%s_%02d\n'%(id,v))
+            xx=0
 
     if K_version==2:
-        pass
+        for i in range(1, 6):
+            if i == 5:
+                num_valid = 62  # 1088
+                num_train = num_ids - num_valid
+                print(num_valid, num_train)  # 48,270
+
+                ids1 = ids[0:num_train]
+                ids2 = ids[num_train:]
+            else:
+                num_valid = 64
+                num_train = num_ids - num_valid
+
+                ids1 = ids[0:64 * (i - 1)] + ids[-62 + (i - 4) * 64:]
+                ids2 = ids[64 * (i - 1):64 * i]
+
+                assert (len(ids2) == num_valid)
+                assert (len(ids1) == num_train)
+                print(len(ids2), len(ids1))
+                # make train, valid
+            file1 = CARVANA_DIR + '/split/' + 'train_v%d_k%d' % (K_version, i)
+            file2 = CARVANA_DIR + '/split/' + 'valid_v%d_k%d' % (K_version, i)
+            for pair in [(file1, ids1), (file2, ids2)]:
+                file = pair[0]
+                ids_temp = pair[1]
+
+                with open(file, 'w') as f:
+                    for id in ids_temp:
+                        for v in range(1, CARVANA_NUM_VIEWS + 1):
+                            # f.write('train/%s_%02d\n'%(id,v))
+                            f.write('%s_%02d\n' % (id, v))
+            xx = 0
  # if 1:
  #        img_dir  = CARVANA_DIR + '/images/train'
  #        mask_dir = CARVANA_DIR + '/annotations/train'  # read all annotations
@@ -101,25 +152,40 @@ def split_train_valid_list(K_version):
 
     pass
 
-def check_lists_overlap():
+def check_lists_overlap(K_version):
+    print('check_lists_overlap')
+    for i in range(1,6):
+        split = 'train_v%d_k%d'%(K_version,i)
+        split_file = CARVANA_DIR +'/split/'+ split
+        with open(split_file) as f:
+            names = f.readlines()
+        names1 = [x.strip()for x in names]
 
-    split_file = CARVANA_DIR +'/split/'+ 'train_v0_4320'
-    with open(split_file) as f:
-        names = f.readlines()
-    names1 = [x.strip()for x in names]
+        split = 'valid_v%d_k%d'%(K_version,i)
+        split_file = CARVANA_DIR +'/split/'+ split
+        with open(split_file) as f:
+            names = f.readlines()
+        names2 = [x.strip()for x in names]
 
-    split_file = CARVANA_DIR +'/split/'+ 'valid_v0_768'
-    with open(split_file) as f:
-        names = f.readlines()
-    names2 = [x.strip()for x in names]
+        r = bool(set(names1) & set(names2))
+        print (r)
 
+def check_val_overlap(K_version):
+    print('check_val_overlap')
+    sum_names = []
+    for i in range(1,6):
+        split = 'valid_v%d_k%d'%(K_version,i)
+        split_file = CARVANA_DIR +'/split/'+ split
+        with open(split_file) as f:
+            names = f.readlines()
+        temp_ = [x.strip()for x in names]
 
-    r = bool(set(names1) & set(names2))
-    print (r)
+        r = bool(set(sum_names) & set(temp_))
+        print (r)
 
-
-
-
+        sum_names = sum_names + temp_
+    assert (len(sum_names)==5088)
+    assert (len(set(sum_names)) == 5088)
 
 def run_make_train_ids():
     split = 'train_5088'
@@ -182,8 +248,10 @@ if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
     CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
-    #split_train_valid_list()
-    check_lists_overlap()
+    for version in range(1,3):
+        split_train_valid_list(version)
+        check_lists_overlap(version)
+        check_val_overlap(version)
     #run_make_train_ids()
     #run_make_train_backgrounds()
 
