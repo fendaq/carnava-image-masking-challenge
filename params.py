@@ -39,6 +39,10 @@ save_full_resolution_mask = False
 post_prosses = False # 'True' return origin sizes, 'False' return input_size
 
 #-------post_train.py----------------
+# k-folds
+post_k_folds = 1
+
+#run_post_train
 max_post_train_epochs = 65
 init_post = '050.pth'
 
@@ -54,6 +58,9 @@ post_model = UNet1024_post_train_02
 #------------------------------------------------
 
 #-------train_seg_net.py-------------
+# k-folds
+k_version = 2
+k_folds = 1
 
 # run_train()
 max_epochs = 50

@@ -275,7 +275,7 @@ def run_train():
     batch_size = params.step_batch_size
     num_grad_acc =  params.real_batch_size//batch_size
 
-    train_dataset = KgCarDataset(  'train_v0_4320',
+    train_dataset = KgCarDataset(  'train_v%d_k%d'%(params.k_version,params.k_folds),
                                    #'train_5088',
                                    'train',
                                    #'train128x128', ## 1024x1024 ##
@@ -291,7 +291,7 @@ def run_train():
                         pin_memory  = True)
     ##check_dataset(train_dataset, train_loader), exit(0)
 
-    valid_dataset = KgCarDataset('valid_v0_768', 
+    valid_dataset = KgCarDataset('valid_v%d_k%d'%(params.k_version,params.k_folds), 
                                  #'train128x128', 
                                  'train',
                                   transform=[], mode='train')
@@ -555,7 +555,8 @@ def run_valid():
     valid_dataset = KgCarDataset(
                                 #'train_160', 'train512x512',
                                 #'train_v0_4320', 'train512x512',
-                                'valid_v0_768',   'train', #'train1024x1024',
+                                'valid_v%d_k%d'%(params.k_version,params.k_folds),
+                                'train', #'train1024x1024',
                                 transform=[
                                 ])
     valid_loader  = DataLoader(
@@ -765,7 +766,8 @@ def save_origin_mask(): #保存预测的原始mask图片
                             pin_memory  = True)
 
     else:
-        test_dataset = KgCarDataset( 'train_5088',  'train',#100064  #3197
+        test_dataset = KgCarDataset( 'valid_v%d_k%d'%(params.k_version,params.k_folds),
+                                     'train',#100064  #3197
                                     #'valid_v0_768',  'train1024x1024',#100064  #3197
                                         transform= [
                                         ],mode='test')

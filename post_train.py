@@ -80,7 +80,7 @@ def run_post_train():
     batch_size = params.step_batch_size
     num_grad_acc =  params.real_batch_size//batch_size
 
-    train_dataset = post_prosses_Dataset(  'train_v0_4320',
+    train_dataset = post_prosses_Dataset(  'post_train_v2_k%d'%params.post_k_folds,
                                    #'train_5088',
                                    'train',
                                    #'train128x128', ## 1024x1024 ##
@@ -97,7 +97,7 @@ def run_post_train():
                         pin_memory  = True)
     ##check_dataset(train_dataset, train_loader), exit(0)
 
-    valid_dataset = post_prosses_Dataset('valid_v0_768',
+    valid_dataset = post_prosses_Dataset('post_valid_v2_k%d'%params.post_k_folds,
                                  #'train128x128', 
                                  'train',
                                  mode='train')
