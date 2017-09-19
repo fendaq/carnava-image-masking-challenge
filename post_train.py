@@ -121,7 +121,7 @@ def run_post_train():
     log.write('** net setting **\n')
 
     #net = Net(in_shape=(3, 128, 128))
-    net = Net(in_shape=(4, params.input_size, params.input_size))
+    net = Net(in_shape=(4, params.input_h, params.input_w))
     net.cuda()
 
     log.write('%s\n\n'%(type(net)))
@@ -173,7 +173,7 @@ def run_post_train():
     #training ####################################################################3
     log.write('** start training here! **\n')
     log.write(' num_grad_acc x batch_size = %d x %d=%d\n'%(num_grad_acc,batch_size,num_grad_acc*batch_size))
-    log.write(' input_size = %d x %d\n'%(params.input_size,params.input_size) )
+    log.write(' input_size = %d x %d\n'%(params.input_h,params.input_w) )
     log.write(' optimizer=%s\n'%str(optimizer) )
     if params.post_using_ReduceLROnPlateau is True:
         log.write(' is_ReduceLRonPlateau: %s\n'%str(params.post_using_ReduceLROnPlateau))

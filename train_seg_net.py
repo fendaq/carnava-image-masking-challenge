@@ -373,7 +373,7 @@ def run_train():
     log.write('** start training here! **\n')
     log.write(' num_grad_acc x batch_size = %d x %d=%d\n'%(num_grad_acc,batch_size,num_grad_acc*batch_size))
     #log.write(' input_size = %d x %d\n'%(params.input_size,params.input_size) )
-    log.write(' input_size = %d x %d\n'%(params.input_w,params.input_h) )
+    log.write(' input_size = %d x %d\n'%(params.input_h,params.input_w) )
     log.write(' optimizer=%s\n'%str(optimizer) )
     if params.using_ReduceLROnPlateau is True:
         log.write(' is_ReduceLRonPlateau: %s\n'%str(lr_scheduler))
