@@ -209,6 +209,13 @@ def random_brightness(image, limit=(-0.3,0.3), u=0.5):
         image = np.clip(image, 0., 1.)
     return image
 
+def random_brightnessN(images, limit=(-0.3,0.3), u=0.5):
+    if random.random() < u:
+        for n, image in enumerate(images):
+            alpha = 1.0 + random.uniform(limit[0], limit[1])
+            image = alpha*image
+            images[n] = np.clip(image, 0., 1.)
+    return images
 
 def random_contrast(image, limit=(-0.3,0.3), u=0.5):
     if random.random() < u:
@@ -219,6 +226,17 @@ def random_contrast(image, limit=(-0.3,0.3), u=0.5):
         image = alpha*image  + gray
         image = np.clip(image,0.,1.)
     return image
+
+def random_contrastN(images, limit=(-0.3,0.3), u=0.5):
+    if random.random() < u:
+        for n, image in enumerate(images):
+            alpha = 1.0 + random.uniform(limit[0], limit[1])
+            coef = np.array([[[0.114, 0.587,  0.299]]]) #rgb to gray (YCbCr)
+            gray = image * coef
+            gray = (3.0 * (1.0 - alpha) / gray.size) * np.sum(gray)
+            image = alpha*image  + gray
+            images[n] = np.clip(image,0.,1.)
+    return images
 
 
 def random_saturation(image, limit=(-0.3,0.3), u=0.5):
