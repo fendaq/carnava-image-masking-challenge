@@ -666,7 +666,6 @@ def run_submit1():
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/submit/results',  exist_ok=True)
-    os.makedirs(out_dir+'/submit/test_mask',  exist_ok=True)
     backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
 
     log = Logger()
@@ -704,9 +703,6 @@ def run_submit1():
     net.load_state_dict(torch.load(model_file))
     net.cuda()
 
-    #num_valid = len(test_dataset)
-    names = test_dataset.names
-    df = test_dataset.df.set_index('id')
 
     if is_merge_bn: merge_bn_in_net(net)
     ## start testing now #####
@@ -714,54 +710,13 @@ def run_submit1():
     start = timer()
 
     net.eval()
+    probs = predict8_in_blocks( net, test_loader, block_size=CSV_BLOCK_SIZE, save_dir=out_dir+'/submit',log=log)           # 20 min
 
-    time_taken = 0
-    end = 0
-    num = 0
-
-    test_num = len(test_loader)
-
-    for it, (images, indices) in enumerate(test_loader, 0):
-        images  = Variable(images,volatile=True).cuda()
-        #labels  = Variable(labels).cuda().half()
-        batch_size = len(indices)
-
-        num = num + batch_size
-
-        #forward
-        t0 =  timer()
-        logits = net(images)
-        probs  = F.sigmoid(logits)
-
-        #warm start
-        #if it>10:
-        #    time_taken = time_taken + timer() - t0
-        #    print(time_taken)
-
-        #a = dice_loss((probs.float()>0.5).float(), labels.float(), is_average=False)
-        #accs[start:start + batch_size]=a.data.cpu().numpy()
-
-        ## full results ----------------
-        probs  = (probs.data.float().cpu().numpy()*255).astype(np.uint8)
-        for b in range(batch_size):
-            name = names[indices[b]]
-            prob = probs[b]
-            
-            cv2.imwrite(out_dir+'/submit/test_mask/%s.png'%(name), prob)
-
-        pass ######################
-        #start = start + batch_size
-        print('it: %d, num: %d'%(it,num), end=' ', flush=True)
-        if num%1000 == 0:
-            log.write(' [it: %d, num: %d] \n'%(it,num))
-            log.write('\t time = %0.2f min \n'%((timer() - start)/60))
-    
-    log.write(' save_masks = %f min\n'%((timer() - start) / 60))
+    log.write('\tpredict_in_blocks = %f min\n'%((timer() - start) / 60))
     log.write('\n')
-    assert(num == test_num)
 
 
-def save_vaild_mask_for_ensemble(): #保存预测的valid mask图片，为第二阶段ensemble生成训练集
+def save_origin_mask(): #保存预测的原始mask图片
 
     is_merge_bn = 1
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-00d'
@@ -774,11 +729,12 @@ def save_vaild_mask_for_ensemble(): #保存预测的valid mask图片，为第二
 
     #logging, etc --------------------
     os.makedirs(out_dir+'/out_mask/results',  exist_ok=True)
-    os.makedirs(out_dir+'/out_mask/valid_mask',  exist_ok=True)
+    os.makedirs(out_dir+'/out_mask/test_mask',  exist_ok=True)
+    os.makedirs(out_dir+'/out_mask/train_mask',  exist_ok=True)
     backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
 
     log = Logger()
-    log.open(out_dir+'/log.make_valid_mask.txt',mode='a')
+    log.open(out_dir+'/log.make_mask.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
     log.write('* model_file=%s\n' % model_file)
@@ -789,12 +745,26 @@ def save_vaild_mask_for_ensemble(): #保存预测的valid mask图片，为第二
     log.write('** dataset setting **\n')
     batch_size = 4
 
-    test_dataset = KgCarDataset( 'valid_v%d_k%d'%(params.k_version,params.k_folds),
-                                'train',#100064  #3197
-                                #'valid_v0_768',  'train1024x1024',#100064  #3197
-                                transform= [
-                                ],mode='test')
-    test_loader  = DataLoader(
+    if params.save_test:
+        test_dataset = KgCarDataset( 'test_100064',  'test',#100064  #3197
+                                    #'valid_v0_768',  'train1024x1024',#100064  #3197
+                                        transform= [
+                                        ],mode='test')
+        test_loader  = DataLoader(
+                            test_dataset,
+                            sampler     = SequentialSampler(test_dataset),
+                            batch_size  = batch_size,
+                            drop_last   = False,
+                            num_workers = 12,
+                            pin_memory  = True)
+
+    else:
+        test_dataset = KgCarDataset( 'valid_v%d_k%d'%(params.k_version,params.k_folds),
+                                     'train',#100064  #3197
+                                    #'valid_v0_768',  'train1024x1024',#100064  #3197
+                                        transform= [
+                                        ],mode='test')
+        test_loader  = DataLoader(
                             test_dataset,
                             sampler     = SequentialSampler(test_dataset),
                             batch_size  = batch_size,
@@ -813,7 +783,7 @@ def save_vaild_mask_for_ensemble(): #保存预测的valid mask图片，为第二
     net.load_state_dict(torch.load(model_file))
     net.cuda()
 
-    #num_valid = len(test_dataset)
+    num_valid = len(test_dataset)
     names = test_dataset.names
     df = test_dataset.df.set_index('id')
 
@@ -856,9 +826,15 @@ def save_vaild_mask_for_ensemble(): #保存预测的valid mask图片，为第二
         probs  = (probs.data.float().cpu().numpy()*255).astype(np.uint8)
         for b in range(batch_size):
             name = names[indices[b]]
-            prob = probs[b]
 
-            cv2.imwrite(out_dir+'/out_mask/valid_mask/%s.png'%(name), prob)
+            prob = probs[b]
+            if params.save_full_resolution_mask == True:
+                prob = cv2.resize(prob,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)  #INTER_CUBIC  ##
+
+            if params.save_test:
+                cv2.imwrite(out_dir+'/out_mask/test_mask/%s.png'%(name), prob)
+            else:
+                cv2.imwrite(out_dir+'/out_mask/train_mask/%s.png'%(name), prob)
 
         pass ######################
         #start = start + batch_size
@@ -900,27 +876,35 @@ def run_submit2():
 
 
     rles=[]
-    total_start = timer()
-    start = timer()
-    for i in range(len(names)):     
-        p = cv2.imread(out_dir+'/submit/test_mask/%s.png'%(names[i]))
-        if (i%1000==0):
-            end  = timer()
-            n = len(rles)          
-            time = (end - start) / 60
-            time_remain = (num_test-n-1)*time/(n+1)
-            print('rle : b/num_test = %06d/%06d,  time elased (remain) = %0.1f (%0.1f) min'%(n,num_test,time,time_remain))
-            start = timer()
+    num_blocks = int(math.ceil(num_test/CSV_BLOCK_SIZE))
+    print('num_blocks=%d'%num_blocks)
+    for i in range(num_blocks):
+        start = timer()
+        ps   = np.load(out_dir+'/submit/probs-part%02d.8.npy'%i)
+        inds = np.loadtxt(out_dir+'/submit/indices-part%02d.8.txt'%i,dtype=np.int32)
+        log.write('\tnp.load time = %f min\n'%((timer() - start) / 60))
 
-        prob = cv2.resize(p,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)
-        mask = prob>127
-        rle  = run_length_encode(mask)
-        rles.append(rle)
+        M = len(ps)
+        for m in range(M):
+            if (m%1000==0):
+                n = len(rles)
+                end  = timer()
+                time = (end - start) / 60
+                time_remain = (num_test-n-1)*time/(n+1)
+                print('rle : b/num_test = %06d/%06d,  time elased (remain) = %0.1f (%0.1f) min'%(n,num_test,time,time_remain))
+            #--------------------------------------------------------
+            p=ps[m]
+            ind=inds[m]
+
+            prob = cv2.resize(p,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)
+            mask = prob>127
+            rle  = run_length_encode(mask)
+            rles.append(rle)
 
 
             #debug
             #if 0:
-    '''           
+            '''
             if m<10 and i==0:
                 name = names[ind]
                 img_file = CARVANA_DIR + '/images/test/%s.jpg'%(name)
@@ -931,8 +915,10 @@ def run_submit2():
                 im_show('prob',prob,0.33)
                 im_show('p',p,0.33)
                 cv2.waitKey(1)
-    '''
+            '''
+
     #-----------------------------------------------------
+    start = timer()
     names = [name+'.jpg' for name in names]
 
     dir_name = out_dir.split('/')[-1]
@@ -940,7 +926,7 @@ def run_submit2():
     df = pd.DataFrame({ 'img' : names, 'rle_mask' : rles})
     df.to_csv(gz_file, index=False, compression='gzip')
 
-    log.write('\tdf.to_csv time = %f min\n'%((timer() - total_start) / 60)) #3 min
+    log.write('\tdf.to_csv time = %f min\n'%((timer() - start) / 60)) #3 min
     log.write('\n')
 
 

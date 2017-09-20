@@ -4,15 +4,9 @@ from dataset.mask import *
 import params
 
 
-if params.my_computer:
-    CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
-else:
-    CARVANA_DIR = '/kaggle_data_results/Kaggle/kaggle-carvana-cars-2017'
+CARVANA_DIR = params.CARVANA_DIR
 
-if params.my_computer:
-    out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-else:
-    out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
+out_dir = params.out_dir + params.save_path
     
 
 CARVANA_NUM_VIEWS = 16

@@ -217,9 +217,15 @@ def evaluate(net, test_loader):
 def run_train():
 
     if params.my_computer:
-        out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
+        if params.ensemble_train:
+            out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/ensemble/' + params.save_path
+        else:
+            out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
     else:
-        out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
+        if params.ensemble_train:
+            out_dir = '/kaggle_data_results/results/lhc/ensemble/' + params.save_path
+        else:
+            out_dir = '/kaggle_data_results/results/lhc/single/' + params.save_path
 
     if params.init_checkpoint is not None:
         initial_checkpoint = out_dir + '/checkpoint/' + params.init_checkpoint 
@@ -917,119 +923,7 @@ def run_submit2():
 
 
 
-def ensamble_th():
 
-    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00c'
-    #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
-    if params.my_computer:
-        out_dir1 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir2 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir3 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir4 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir5 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir6 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir7 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir8 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir9 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-        out_dir10 = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/' + params.save_path
-    else:
-        out_dir1 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir2 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir3 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir4 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir5 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir6 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir7 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir8 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir9 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-        out_dir10 = '/kaggle_data_results/results/lhc/single/' + params.save_path
-
-    #logging, etc --------------------
-    os.makedirs(out_dir+'/submit/results',  exist_ok=True)
-    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
-
-    log = Logger()
-    log.open(out_dir+'/log.submit.txt',mode='a')
-    log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
-    log.write('** some project setting **\n')
-
-
-    # read names
-    # split_file = CARVANA_DIR +'/split/'+ 'valid_v0_768'
-    # CARVANA_NUM_BLOCKS =1
-
-
-    split_file = CARVANA_DIR +'/split/'+ 'test_100064'
-    with open(split_file) as f:
-        names = f.readlines()
-    names = [name.strip()for name in names]
-    num_test = len(names)
-
-
-    rles=[]
-    #num_blocks = int(math.ceil(num_test/CSV_BLOCK_SIZE))
-    #print('num_blocks=%d'%num_blocks)
-    total_start = timer()
-    start = timer()
-    for i in range(len(names)): 
-        if params.save_test:
-            p1 = cv2.imread(out_dir1+'/out_mask/test_mask/%s.png'%(names[i]))
-            p2 = cv2.imread(out_dir2+'/out_mask/test_mask/%s.png'%(names[i]))
-            p3 = cv2.imread(out_dir3+'/out_mask/test_mask/%s.png'%(names[i]))
-            p4 = cv2.imread(out_dir4+'/out_mask/test_mask/%s.png'%(names[i]))
-            p5 = cv2.imread(out_dir5+'/out_mask/test_mask/%s.png'%(names[i]))
-            p6 = cv2.imread(out_dir6+'/out_mask/test_mask/%s.png'%(names[i]))
-            p7 = cv2.imread(out_dir7+'/out_mask/test_mask/%s.png'%(names[i]))
-            p8 = cv2.imread(out_dir8+'/out_mask/test_mask/%s.png'%(names[i]))
-            p9 = cv2.imread(out_dir9+'/out_mask/test_mask/%s.png'%(names[i]))
-            p10 = cv2.imread(out_dir10+'/out_mask/test_mask/%s.png'%(names[i]))
-        else:
-            p1 = cv2.imread(out_dir1+'/out_mask/train_mask/%s.png'%(names[i]))
-            p2 = cv2.imread(out_dir2+'/out_mask/train_mask/%s.png'%(names[i]))
-            p3 = cv2.imread(out_dir3+'/out_mask/train_mask/%s.png'%(names[i]))
-            p4 = cv2.imread(out_dir4+'/out_mask/train_mask/%s.png'%(names[i]))
-            p5 = cv2.imread(out_dir5+'/out_mask/train_mask/%s.png'%(names[i]))
-            p6 = cv2.imread(out_dir6+'/out_mask/train_mask/%s.png'%(names[i]))
-            p7 = cv2.imread(out_dir7+'/out_mask/train_mask/%s.png'%(names[i]))
-            p8 = cv2.imread(out_dir8+'/out_mask/train_mask/%s.png'%(names[i]))
-            p9 = cv2.imread(out_dir9+'/out_mask/train_mask/%s.png'%(names[i]))
-            p10 = cv2.imread(out_dir10+'/out_mask/train_mask/%s.png'%(names[i]))
-
-
-        p1 = image_to_tensor(p1)
-        p2 = image_to_tensor(p2)
-        p3 = image_to_tensor(p3)
-        p4 = image_to_tensor(p4)
-        p5 = image_to_tensor(p5)
-        p6 = image_to_tensor(p6)
-        p7 = image_to_tensor(p7)
-        p8 = image_to_tensor(p8)
-        p9 = image_to_tensor(p9)
-        p10 = image_to_tensor(p10)
-
-        p = (p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10)/10
-        if (i%1000==0):
-            end  = timer()
-            n = len(rles)
-            time = (end - start) / 60
-            time_remain = (num_test-n-1)*time/(n+1)
-            print('rle : b/num_test = %06d/%06d,  time elased (remain) = %0.1f (%0.1f) min'%(n,num_test,time,time_remain))
-            start = timer()
-
-        prob = cv2.resize(p,dsize=(CARVANA_WIDTH,CARVANA_HEIGHT),interpolation=cv2.INTER_LINEAR)
-        mask = prob>127
-        rle  = run_length_encode(mask)
-        rles.append(rle)
-
-    names = [name+'.jpg' for name in names]
-
-    dir_name = out_dir.split('/')[-1]
-    gz_file  = out_dir + '/submit/results-%s.csv.gz'%dir_name
-    df = pd.DataFrame({ 'img' : names, 'rle_mask' : rles})    
-    df.to_csv(gz_file, index=False, compression='gzip')
-
-    log.write('\tdf.to_csv time = %f min\n'%((timer() - total_start) / 60)) #3 min
-    log.write('\n')
 
 # main #################################################################
 if __name__ == '__main__':

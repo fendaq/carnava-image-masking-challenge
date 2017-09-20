@@ -17,7 +17,19 @@ from model.segmentation.unet_variant import \
             UNet1024_GCN_k15_07,
 '''         
 
-my_computer  = True
+#my_computer  = True
+#data_dir-----------------------
+CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
+#CARVANA_DIR = '/kaggle_data_results/Kaggle/kaggle-carvana-cars-2017'
+#-------------------------------
+
+#out_dir------------------------
+out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/ensemble/'
+#out_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/single/'
+
+#out_dir = '/kaggle_data_results/results/lhc/ensemble/'
+#out_dir = '/kaggle_data_results/results/lhc/single/'
+#-------------------------------
 
 #input_size = 1024
 input_w = 1024
@@ -29,11 +41,7 @@ orig_height = 1280
 #-----------------------------------------------
 # train_seg: run_valid() run_submit1() save_origin_mask()
 npy_BLOCK_SIZE = 8000 #both for train_seg and post_train
-model_snap = None#'060.pth'
-
-# save_origin_mask()
-save_test = False # 'False' means save train images
-save_full_resolution_mask = False
+model_snap = None #'060.pth'
 
 #-------carvana_cars.py--------------
 post_prosses = False # 'True' return origin sizes, 'False' return input_size
@@ -62,8 +70,10 @@ post_model = UNet1024_post_train_02
 k_version = 2
 k_folds = 1
 
+#ensemble_train = True
+
 # run_train()
-max_epochs = 50
+max_epochs = 60
 
 init_checkpoint = None # '060.pth'
 
@@ -92,6 +102,10 @@ step_batch_size = 3
 #model_factory = UNet1024_ASPP_03;   save_path = 'UNet1024_ASPP_03'
 
 #model_factory = UNet1024_ASPP_07; save_path = 'UNet1024_ASPP_07'
-model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08'
+model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k1'
+#model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k2'
+#model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k3'
+#model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k4'
+#model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k5'
 
 #model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06'
