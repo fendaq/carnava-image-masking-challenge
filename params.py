@@ -6,18 +6,8 @@ from model.segmentation.unet_variant import \
             UNet1024_post_train,UNet1024_post_train_01, \
             UNet1024_post_train_02, \
             UNet1024_GCN_k15_06, \
-            UNet1024_ASPP_02,UNet1024_ASPP_07,UNet1024_ASPP_08
-'''
-            UNet1024_dropout,
-            UNet1024_ASPP,UNet1024_ASPP_03,UNet1024_ASPP_04,UNet1024_ASPP_05,
-            UNet1024_ASPP_06,
-            UNet1024_GCN_baseline,UNet1024_GCN_k15,
-            UNet1024_GCN_k15_02,UNet1024_GCN_k15_03,
-            UNet1024_GCN_k15_04,UNet1024_GCN_k15_05,
-            UNet1024_GCN_k15_07,
-'''         
+            UNet1024_ASPP_02,UNet1024_ASPP_07,UNet1024_ASPP_08     
 
-#my_computer  = True
 #data_dir-----------------------
 CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
 #CARVANA_DIR = '/kaggle_data_results/Kaggle/kaggle-carvana-cars-2017'
@@ -38,9 +28,12 @@ input_h = 1024
 orig_width = 1918
 orig_height = 1280
 
+#-------ensemble.py-----------------------------
+ensemble_dir = 'UNet1024_ASPP_08'
 #-----------------------------------------------
-# train_seg: run_valid() run_submit1() save_origin_mask()
-npy_BLOCK_SIZE = 8000 #both for train_seg and post_train
+
+#-----------------------------------------------
+# train_seg: run_valid() run_submit1() save_valid_mask()
 model_snap = None #'060.pth'
 
 #-------carvana_cars.py--------------

@@ -217,7 +217,7 @@ class post_prosses_Dataset(Dataset):
             image,mask,label = t(image,mask,label)
 
         image = image_to_tensor(image)
-        mask = label_to_tensor(mask)
+        mask = prior_to_tensor(mask)
         label = label_to_tensor(label)
 
         mask = mask.unsqueeze(0)

@@ -917,7 +917,6 @@ def run_submit2():
         rle  = run_length_encode(mask)
         rles.append(rle)
 
-
             #debug
             #if 0:
     '''           
