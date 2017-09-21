@@ -1067,7 +1067,7 @@ def run_valid():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    opts, args = getopt.getopt(sys.argv[1:], 'tvms', ['s1','s2'])
+    opts, args = getopt.getopt(sys.argv[1:], 'tvms', ['s1','s2','tta'])
     
     for opt, val in opts: 
         print(opt)
@@ -1077,7 +1077,7 @@ if __name__ == '__main__':
     elif opt =='-v':  
         run_valid()
     elif opt =='-m':  
-        save_origin_mask()
+        save_vaild_mask_for_ensemble()
     elif opt =='-s':  
         run_submit1()
         run_submit2()
@@ -1085,6 +1085,8 @@ if __name__ == '__main__':
         run_submit1()
     elif opt =='--s2':
         run_submit2()
+    elif opt =='--tta':
+        TTA()
     else:
         print('nothing,stop')
 

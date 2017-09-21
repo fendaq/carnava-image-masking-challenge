@@ -23,10 +23,6 @@ def get_model_from_dir():
 
     pass
 
-# k折，两种方案
-# v1：前3折1088（68），第4折1056（66），第5折768（48）
-# v2：前4折1024（64），第5折992（62） 
-# 5折，k1～k5
 def split_train_valid_list(K_version):
     split = 'train_5088'
 
@@ -43,11 +39,12 @@ def split_train_valid_list(K_version):
     num_ids = len(ids)
     print(num_ids) #318
     
-    if K_version==1:
-        num_valid=48  #(15%)
-        num_train=num_ids-num_valid
-        print(num_valid,num_train) #48,270
 
+    num_valid=48  #(15%)
+    num_train=num_ids-num_valid
+    print(num_valid,num_train) #48,270
+
+    if 1:
         random.shuffle(ids)
 
         #make train, valid
@@ -67,8 +64,6 @@ def split_train_valid_list(K_version):
                         f.write('%s_%02d\n'%(id,v))
         xx=0
 
-    if K_version==2:
-        pass
  # if 1:
  #        img_dir  = CARVANA_DIR + '/images/train'
  #        mask_dir = CARVANA_DIR + '/annotations/train'  # read all annotations

@@ -91,8 +91,7 @@ def ensamble_png():
         p = []
         average = np.zeros((CARVANA_H,CARVANA_W),np.uint16)
         for j in range(0,5):
-            p.append(cv2.imread(out_dir_[i]+'/out_mask/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
-            #p.append(cv2.imread(out_dir_[i]+'/out_mask/train_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
+            p.append(cv2.imread(out_dir_[j]+'/out_mask/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
             p[j] = p[j].astype(np.uint8)
             
             average += p[j]
@@ -141,8 +140,9 @@ def run_submit_ensemble():
     rles=[]
     total_start = timer()
     start = timer()
-    for i in range(len(names)):     
-        p = cv2.imread(final_out_dir+'/submit/test_mask/%s.png'%(names[i]))
+    for i in range(len(names)):
+        #test
+        p = cv2.imread(final_out_dir+'/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE)
         if (i%1000==0):
             end  = timer()
             n = len(rles)          
@@ -158,8 +158,8 @@ def run_submit_ensemble():
     #-----------------------------------------------------
     names = [name+'.jpg' for name in names]
 
-    dir_name = out_dir.split('/')[-1]
-    gz_file  = out_dir + '/submit/results-%s.csv.gz'%dir_name
+    dir_name = final_out_dir.split('/')[-1]
+    gz_file  = final_out_dir + '/submit/results-%s.csv.gz'%dir_name
     df = pd.DataFrame({ 'img' : names, 'rle_mask' : rles})
     df.to_csv(gz_file, index=False, compression='gzip')
 
@@ -171,7 +171,7 @@ def run_submit_ensemble():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    ensamble_png()
+    #ensamble_png()
     run_submit_ensemble()
 
     print('\nsucess!')

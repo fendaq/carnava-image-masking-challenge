@@ -337,7 +337,7 @@ def run_post_submit1():
 
     ## dataset ----------------------------
     log.write('** dataset setting **\n')
-    batch_size = 4
+    batch_size = 8
 
     test_dataset = post_prosses_Dataset( 'test_100064',  'test',#100064  #3197
                                  #'valid_v0_768',  'train1024x1024',#100064  #3197
@@ -398,7 +398,7 @@ def run_post_submit1():
 
             cv2.imwrite(out_dir+'/submit/test_mask/%s.png'%(name), prob)
 
-        print('it: %d, num: %d'%(it,num), end=' ', flush=True)
+        print('\rit: %d, num: %d'%(it,num), end=' ', flush=True)
         if num%1000 == 0:
             log.write(' [it: %d, num: %d] \n'%(it,num))
             log.write('\t time = %0.2f min \n'%((timer() - start)/60))
@@ -441,7 +441,7 @@ def run_post_submit2():
     total_start = timer()
     start = timer()
     for i in range(len(names)):     
-        p = cv2.imread(out_dir+'/submit/test_mask/%s.png'%(names[i]))
+        p = cv2.imread(out_dir+'/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE)
         if (i%1000==0):
             end  = timer()
             n = len(rles)          

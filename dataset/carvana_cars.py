@@ -136,6 +136,8 @@ class KgCarDataset(Dataset):
         return len(self.names)
 
 
+
+
 class post_prosses_Dataset(Dataset):
 
     def __init__(self, split, folder, transform=[], mode='train'):
@@ -231,7 +233,7 @@ class post_prosses_Dataset(Dataset):
         mask = self.get_mask(index)
 
         image = image_to_tensor(image)
-        mask = label_to_tensor(mask)
+        mask = prior_to_tensor(mask)
 
         mask = mask.unsqueeze(0)
 

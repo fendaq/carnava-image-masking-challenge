@@ -1,3 +1,6 @@
+import params
+import torch
+
 def MSC_infer(): #msc检测坏测试数据，参考run_valid
 
     is_merge_bn = 1
@@ -9,12 +12,12 @@ def MSC_infer(): #msc检测坏测试数据，参考run_valid
     model_file = out_dir + '/snap/' + params.model_snap
 
     #logging, etc --------------------
-    os.makedirs(out_dir+'/submit/results',  exist_ok=True)
-    os.makedirs(out_dir+'/submit/test_mask',  exist_ok=True)
+    os.makedirs(out_dir+'/MSC_infer',  exist_ok=True)
+    os.makedirs(out_dir+'/MSC_infer/results',  exist_ok=True)
     backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
 
     log = Logger()
-    log.open(out_dir+'/log.submit.txt',mode='a')
+    log.open(out_dir+'/log.MSC_infer.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
     log.write('* model_file=%s\n' % model_file)
@@ -23,7 +26,7 @@ def MSC_infer(): #msc检测坏测试数据，参考run_valid
 
     ## dataset ----------------------------
     log.write('** dataset setting **\n')
-    batch_size = 4
+    batch_size = 1
 
     test_dataset = KgCarDataset( 'test_100064',  'test',#100064  #3197
                                  #'valid_v0_768',  'train1024x1024',#100064  #3197
@@ -46,7 +49,7 @@ def MSC_infer(): #msc检测坏测试数据，参考run_valid
     ## net ----------------------------------------
     net = Net(in_shape=(3, CARVANA_HEIGHT, CARVANA_WIDTH))
     net.load_state_dict(torch.load(model_file))
-    net.cuda()
+    net.cuda().half()
 
     #num_valid = len(test_dataset)
     names = test_dataset.names
@@ -65,8 +68,28 @@ def MSC_infer(): #msc检测坏测试数据，参考run_valid
 
     test_num = len(test_loader)
 
-    for it, (images0, indices) in enumerate(test_loader, 0):
-        images0  = Variable(images0,volatile=True).cuda()
+    for it, (images, indices) in enumerate(test_loader, 0):
+
+        images1 = torch.squeeze(images,dim=1)
+        images1 = (images1.data.float().cpu().numpy()*255).astype(np.uint8)
+        images1 = cv2.cvtColor(images1)
+        images1 = cv2.resize(images1,(512,512))
+        images1 = images1.astype(np.float32)/255
+        images1 = torch.from_numpy(images1)
+        images1.unsqueeze(0)
+        
+        images2 = torch.squeeze(images,dim=1)
+        images2 = (images2.data.float().cpu().numpy()*255).astype(np.uint8)
+        images2 = cv2.cvtColor(images2)
+        images2 = cv2.resize(images2,(1600,1600))
+        images2 = images2.astype(np.float32)/255
+        images2 = torch.from_numpy(images2)
+        images2.unsqueeze(0)
+
+        images  = Variable(images,volatile=True).cuda()
+        images1  = Variable(images1,volatile=True).cuda()
+        images2  = Variable(images2,volatile=True).cuda()
+        
         #labels  = Variable(labels).cuda().half()
         batch_size = len(indices)
 
@@ -75,10 +98,7 @@ def MSC_infer(): #msc检测坏测试数据，参考run_valid
         #forward
         t0 =  timer()
 
-        images1 = random_brightnessN(images0, limit=(-0.5,0.5), u=1)
-        images2 = random_contrastN(images0, limit=(-0.5,0.5), u=1)
-
-        logits0 = net(images0)
+        logits0 = net(images)
         probs0  = F.sigmoid(logits0)
 
         logits1 = net(images1)
@@ -86,6 +106,22 @@ def MSC_infer(): #msc检测坏测试数据，参考run_valid
 
         logits2 = net(images2)
         probs2  = F.sigmoid(logits2)
+
+        probs1 = torch.squeeze(probs1,dim=1)
+        probs1 = (probs1.data.float().cpu().numpy()*255).astype(np.uint8)
+        probs1 = cv2.cvtColor(probs1)
+        probs1 = cv2.resize(probs1,(params.input_w,params.input_h))
+        probs1 = probs1.astype(np.float32)/255
+        probs1 = torch.from_numpy(probs1)
+        probs1.unsqueeze(0).cuda()
+        
+        probs2 = torch.squeeze(probs2,dim=1)
+        probs2 = (probs2.data.float().cpu().numpy()*255).astype(np.uint8)
+        probs2 = cv2.cvtColor(probs2)
+        probs2 = cv2.resize(probs2,(params.input_w,params.input_h))
+        probs2 = probs2.astype(np.float32)/255
+        probs2 = torch.from_numpy(probs2)
+        probs2.unsqueeze(0).cuda()
 
         #warm start
         #if it>10:
@@ -96,16 +132,15 @@ def MSC_infer(): #msc检测坏测试数据，参考run_valid
         #accs[start:start + batch_size]=a.data.cpu().numpy()
 
         ## full results ----------------
-        probs0 = (probs0.data.float().cpu().numpy()*255).astype(np.uint8)
-        probs1 = (probs1.data.float().cpu().numpy()*255).astype(np.uint8)
-        probs2 = (probs2.data.float().cpu().numpy()*255).astype(np.uint8)
+        a = dice_loss((probs0.float()>0.5).float(), (probs1.float()>0.5).float(), is_average=True)
+        b = dice_loss((probs1.float()>0.5).float(), (probs2.float()>0.5).float(), is_average=True)
 
-        probs = (probs0 + probs1 + probs2)/3
-        for b in range(batch_size):
-            name = names[indices[b]]
-            prob = probs[b]
-            
-            cv2.imwrite(out_dir+'/submit/test_mask/%s.png'%(name), prob)
+        if (a<0.9969 or b<0.9969):
+            for b in range(batch_size): #batch = 1
+                name = names[indices[b]]
+                prob = probs0[b]
+                
+                cv2.imwrite(out_dir+'/MSC_infer/%s.png'%(name), prob)
 
         print('\r it: %d, num: %d'%(it,num), end=' ', flush=True)
         if num%8000 == 0:
