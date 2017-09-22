@@ -279,7 +279,7 @@ def run_train():
     train_loader  = DataLoader(
                         train_dataset,
                         #sampler = RandomSampler(train_dataset),
-                        sampler = RandomSamplerWithLength(train_dataset,4320),
+                        sampler = RandomSamplerWithLength(train_dataset,len(train_dataset)),
                         batch_size  = batch_size,
                         drop_last   = True,
                         num_workers = 4,

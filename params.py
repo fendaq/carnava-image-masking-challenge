@@ -95,13 +95,14 @@ step_batch_size = 3
 #model_factory = UNet1024_ASPP_03;   save_path = 'UNet1024_ASPP_03'
 
 #model_factory = UNet1024_ASPP_07; save_path = 'UNet1024_ASPP_07'
+model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_pesudo'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k1'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k2'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k3'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k4'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k5'
 
-model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k1'
+#model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k1'
 # model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k2'
 # model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k3'
 # model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k4'
