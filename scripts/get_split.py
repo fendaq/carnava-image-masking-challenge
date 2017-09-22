@@ -23,6 +23,53 @@ def get_model_from_dir():
 
     pass
 
+def split_train_valid_list_7k(K_version=3,is_post_train=False): #k7划分
+    split = 'train_5088'
+
+    # read names
+    split_file = CARVANA_DIR +'/split/'+ split
+    with open(split_file) as f:
+        names = f.readlines()
+    names = [x.strip()for x in names]
+    num   = len(names) #5088
+
+    ids = list(set(names))
+    num_ids = len(ids) #5088
+
+    if 1:
+        for i in range(1, 8):
+            if i == 7:
+                num_valid = 726  # 1088
+                num_train = num_ids - num_valid
+                print(num_valid, num_train)
+
+                ids1 = ids[0:num_train]
+                ids2 = ids[num_train:]
+            else:
+                num_valid = 727
+                num_train = num_ids - num_valid
+
+                ids1 = ids[0:727 * (i - 1)] + ids[-726 + (i - 6) * 727:]
+                ids2 = ids[727 * (i - 1):727 * i]
+
+                assert (len(ids2) == num_valid)
+                assert (len(ids1) == num_train)
+                print(len(ids2), len(ids1))
+            # make train, valid
+            if is_post_train:
+                file1 = CARVANA_DIR +'/split/'+ 'post_train_v%d_k%d'%(K_version,i)
+                file2 = CARVANA_DIR +'/split/'+ 'post_valid_v%d_k%d'%(K_version,i)
+            else:
+                file1 = CARVANA_DIR +'/split/'+ 'train_v%d_k%d'%(K_version,i)
+                file2 = CARVANA_DIR +'/split/'+ 'valid_v%d_k%d'%(K_version,i)
+            for pair in [(file1, ids1), (file2, ids2)]:
+                file = pair[0]
+                ids_temp = pair[1]
+
+                with open(file, 'w') as f:
+                    for id in ids_temp:
+                        f.write('%s\n' % (id))
+            xx = 0
 # k折，两种方案
 # v1：前3折1088（68），第4折1056（66），第5折768（48）
 # v2：前4折1024（64），第5折992（62） 
@@ -162,7 +209,7 @@ def split_train_valid_list(K_version,is_post_train=False):
 
 def check_lists_overlap(K_version,is_post_train=False):
     print('check_lists_overlap')
-    for i in range(1,6):
+    for i in range(1,8):
         if is_post_train:
             split = 'post_train_v%d_k%d'%(K_version,i)
         else:
@@ -187,7 +234,7 @@ def check_lists_overlap(K_version,is_post_train=False):
 def check_val_overlap(K_version,is_post_train=False):
     print('check_val_overlap')
     sum_names = []
-    for i in range(1,6):
+    for i in range(1,8):
         if is_post_train:
             split = 'post_valid_v%d_k%d'%(K_version,i)
         else:
@@ -265,6 +312,7 @@ if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
     CARVANA_DIR = '/Kaggle/kaggle-carvana-cars-2017'
+    '''
     version = 2
     split_train_valid_list(version)
     check_lists_overlap(version)
@@ -277,5 +325,9 @@ if __name__ == '__main__':
     check_val_overlap(post_version,is_post_train=True)
     #run_make_train_ids()
     #run_make_train_backgrounds()
+    '''
+    #split_train_valid_list_7k()
+    check_lists_overlap(3)
+    check_val_overlap(3)
 
     print('\nsucess!')

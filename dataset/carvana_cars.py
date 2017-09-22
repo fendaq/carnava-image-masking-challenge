@@ -135,7 +135,142 @@ class KgCarDataset(Dataset):
     def __len__(self):
         return len(self.names)
 
+class KgCarDataset_ensemble(Dataset):
 
+    def __init__(self, split, folder, transform=[], mode='train'):
+        super(KgCarDataset_ensemble, self).__init__()
+
+        # read names
+        split_file = CARVANA_DIR +'/split/'+ split
+        with open(split_file) as f:
+            names = f.readlines()
+        names = [name.strip()for name in names]
+        num   = len(names)
+
+        #meta data
+        df = pd.read_csv(CARVANA_DIR +'/metadata.csv')
+
+        #save
+        self.df        = df
+        self.split     = split
+        self.folder    = folder
+        self.transform = transform
+
+        self.mode      = mode
+        self.names     = names
+
+        self.ensemble_DIR = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/ensemble/UNet1024_ASPP_08'
+
+
+    #https://discuss.pytorch.org/t/trying-to-iterate-through-my-custom-dataset/1909
+    def get_image(self,index):
+        name   = self.names[index]
+        folder = self.folder
+        id     = name[:-3]
+        view   = int(name[-2:])-1
+
+        img_file = CARVANA_DIR + '/images/%s/%s.jpg'%(folder,name)
+        #img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
+        #print(img_file)
+        img   = cv2.imread(img_file)
+        if params.post_prosses != True:
+            img = cv2.resize(img,(CARVANA_W,CARVANA_H)) #cv2.resize (W, H)
+        image = img.astype(np.float32)/255
+        return image
+
+    def get_label(self,index):
+        name   = self.names[index]
+        folder = self.folder
+
+        #mask_file = CARVANA_DIR + '/annotations/%s/%s_mask.png'%(folder,name)
+        mask_file = self.ensemble_DIR + '/submit/test_mask/%s.png'%(name)
+        #else:                mask_file = CARVANA_DIR + '/annotations/%s_mask.png'%(name)
+
+        mask = cv2.imread(mask_file,cv2.IMREAD_GRAYSCALE)
+        if params.post_prosses != True:
+            mask = cv2.resize(mask,(CARVANA_W,CARVANA_H))
+        label = mask.astype(np.float32)/255
+        return label
+
+    def get_train_item(self,index):
+        image = self.get_image(index)
+        label = self.get_label(index)
+
+        for t in self.transform:
+            image,label = t(image,label)
+        image = image_to_tensor(image)
+        label = label_to_tensor(label)
+        return image, label, index
+
+    def __getitem__(self, index):
+
+        if self.mode=='train': return self.get_train_item(index)
+
+    def __len__(self):
+        return len(self.names)
+
+
+class KgCarDataset_MSC_infer(Dataset):
+
+    def __init__(self, split, folder, transform=[], mode='test'):
+        super(KgCarDataset_MSC_infer, self).__init__()
+
+        # read names
+        split_file = CARVANA_DIR +'/split/'+ split
+        with open(split_file) as f:
+            names = f.readlines()
+        names = [name.strip()for name in names]
+        num   = len(names)
+
+        #meta data
+        df = pd.read_csv(CARVANA_DIR +'/metadata.csv')
+
+        #save
+        self.df        = df
+        self.split     = split
+        self.folder    = folder
+        self.transform = transform
+
+        self.mode      = mode
+        self.names     = names
+
+
+    #https://discuss.pytorch.org/t/trying-to-iterate-through-my-custom-dataset/1909
+    def get_image(self,index):
+        name   = self.names[index]
+        folder = self.folder
+        id     = name[:-3]
+        view   = int(name[-2:])-1
+
+        img_file = CARVANA_DIR + '/images/%s/%s.jpg'%(folder,name)
+        #img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
+        #print(img_file)
+        img   = cv2.imread(img_file)
+        if params.post_prosses != True:
+            img0 = cv2.resize(img,(CARVANA_W,CARVANA_H)) #cv2.resize (W, H)
+            img1 = cv2.resize(img, (512, 512))  # cv2.resize (W, H)
+            img2 = cv2.resize(img, (1600, 1600))  # cv2.resize (W, H)
+
+        image0 = img0.astype(np.float32)/255
+        image1 = img1.astype(np.float32)/255
+        image2 = img2.astype(np.float32)/255
+        return image0,image1,image2
+
+    def get_test_item(self,index):
+        image0, image1, image2 = self.get_image(index)
+
+        image0 = image_to_tensor(image0)
+        image1 = image_to_tensor(image1)
+        image2 = image_to_tensor(image2)
+        return image0, image1, image2, index
+
+
+    def __getitem__(self, index):
+
+        if self.mode=='test':  return self.get_test_item (index)
+
+    def __len__(self):
+        return len(self.names)
 
 
 class post_prosses_Dataset(Dataset):

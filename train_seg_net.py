@@ -18,10 +18,7 @@ Net = params.model_factory
 #  ffmpeg -y -loglevel 0 -f image2 -r 15 -i 'xxxxx/%*.jpg' -b:v 8000k xxxxx.avi
 #  ffmpeg -i results.avi -vf scale=300:100 -b:v 8000k results-small.avi
 
-CSV_BLOCK_SIZE = params.npy_BLOCK_SIZE
-
-
-
+CSV_BLOCK_SIZE = 8000
 
 ## experiment setting here ----------------------------------------------------
 def criterion(logits, labels, is_weight=True):

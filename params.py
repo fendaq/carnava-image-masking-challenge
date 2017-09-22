@@ -29,7 +29,7 @@ orig_width = 1918
 orig_height = 1280
 
 #-------ensemble.py-----------------------------
-ensemble_dir = 'UNet1024_ASPP_08'
+ensemble_dir = 'UNet1024_GCN_06'
 #-----------------------------------------------
 
 #-----------------------------------------------
@@ -60,7 +60,7 @@ post_model = UNet1024_post_train_02
 
 #-------train_seg_net.py-------------
 # k-folds
-k_version = 2
+k_version = 3
 k_folds = 1
 
 #ensemble_train = True
@@ -95,10 +95,16 @@ step_batch_size = 3
 #model_factory = UNet1024_ASPP_03;   save_path = 'UNet1024_ASPP_03'
 
 #model_factory = UNet1024_ASPP_07; save_path = 'UNet1024_ASPP_07'
-model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k1'
+#model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k1'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k2'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k3'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k4'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k5'
 
-#model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06'
+model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k1'
+# model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k2'
+# model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k3'
+# model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k4'
+# model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k5'
+# model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k6'
+# model_factory = UNet1024_GCN_k15_06; save_path = 'UNet1024_GCN_k15_06_k7'
