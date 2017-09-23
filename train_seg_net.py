@@ -701,12 +701,12 @@ def TTA(): #test time augmentation
     model_file = out_dir + '/snap/' + params.model_snap
 
     #logging, etc --------------------
-    os.makedirs(out_dir+'/submit/results',  exist_ok=True)
-    os.makedirs(out_dir+'/submit/test_mask',  exist_ok=True)
-    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
+    os.makedirs(out_dir+'/TTA/results',  exist_ok=True)
+    os.makedirs(out_dir+'/TTA/test_mask',  exist_ok=True)
+    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/TTA.code.zip')
 
     log = Logger()
-    log.open(out_dir+'/log.submit.txt',mode='a')
+    log.open(out_dir+'/log.TTA.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
     log.write('* model_file=%s\n' % model_file)
@@ -797,7 +797,7 @@ def TTA(): #test time augmentation
             name = names[indices[b]]
             prob = probs[b]
             
-            cv2.imwrite(out_dir+'/submit/test_mask/%s.png'%(name), prob)
+            cv2.imwrite(out_dir+'/TTA/test_mask/%s.png'%(name), prob)
 
         print('\r it: %d, num: %d'%(it,num), end=' ', flush=True)
         if num%8000 == 0:

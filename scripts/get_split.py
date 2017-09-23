@@ -22,7 +22,11 @@ def get_model_from_dir():
    #          print('%d match=%s'%(n,match))
 
     pass
+    
+# 45x6+48
 
+
+# 完全打乱的7k划分方式
 def split_train_valid_list_7k(K_version=3,is_post_train=False): #k7划分
     split = 'train_5088'
 

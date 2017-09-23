@@ -48,6 +48,59 @@ def run_vote():
     gz_file = out_dir+'/results-ensemble-th%05f.csv.gz'%threshold
     prob_to_csv(gz_file, names, votes, log, threshold)
 
+def ensamble_png_custom():
+    out_dir_ = []
+    
+    out_dir_.append(params.out_dir + '/UNet1024_ASPP_08')
+    out_dir_.append(params.out_dir + '/UNet1024_ASPP_08_k3')
+    out_dir_.append(params.out_dir + '/UNet1024_ASPP_08_k4')
+
+
+    final_out_dir = params.out_dir + params.ensemble_dir
+
+    #logging, etc --------------------
+    os.makedirs(final_out_dir+'/submit/results',  exist_ok=True)
+    os.makedirs(final_out_dir + '/submit/test_mask', exist_ok=True)
+    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), final_out_dir +'/backup/submit.code.zip')
+
+    log = Logger()
+    log.open(final_out_dir+'/log.submit.txt',mode='a')
+    log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
+    log.write('** some project setting **\n')
+
+    split_file = CARVANA_DIR +'/split/'+ 'test_100064'
+    with open(split_file) as f:
+        names = f.readlines()
+    names = [name.strip()for name in names]
+    num_test = len(names)
+
+    rles=[]
+    total_start = timer()
+    start = timer()
+    for i in range(len(names)): 
+        p = []
+        average = np.zeros((CARVANA_H,CARVANA_W),np.uint16)
+
+        p.append(cv2.imread(out_dir_[0]+'/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
+        p.append(cv2.imread(out_dir_[1]+'/post_train/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
+        p.append(cv2.imread(out_dir_[2]+'/post_train/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
+            
+        for temp_ in p:
+            temp_ = temp_.astype(np.uint8)
+            average += temp_
+        
+        average = average/len(p)
+        
+        cv2.imwrite(final_out_dir+'/submit/test_mask/%s.png'%(names[i]), average.astype(np.uint8))
+
+        if i%1000 == 0:
+            log.write(' [num: %d] \n'%(i))
+            log.write('\t time = %0.2f min \n'%((timer() - start)/60))
+            start = timer()
+    
+    log.write(' save_masks = %f min\n'%((timer() - total_start) / 60))
+    log.write('\n')
+
 def ensamble_png():
 
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet512-peduo-label-00c'
@@ -171,6 +224,7 @@ def run_submit_ensemble():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
+    ensamble_png_custom()
     #ensamble_png()
     run_submit_ensemble()
 
