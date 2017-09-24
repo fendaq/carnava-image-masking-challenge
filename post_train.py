@@ -15,7 +15,7 @@ from model.segmentation.blocks import *
 
 Net = params.post_model
 
-CSV_BLOCK_SIZE = params.npy_BLOCK_SIZE
+#CSV_BLOCK_SIZE = params.npy_BLOCK_SIZE
 
 # ------------------------------------------------------------------------------------
 def run_post_train():
@@ -466,7 +466,7 @@ def run_post_submit2():
     log.write('\tdf.to_csv time = %f min\n'%((timer() - total_start) / 60)) #3 min
     log.write('\n')
 
-def TTA(): #test time augmentation
+def TTA(): #test time augmentation --post train 未完工
 
     is_merge_bn = 1
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-00d'
@@ -476,15 +476,15 @@ def TTA(): #test time augmentation
     out_dir = out_dir + '/post_train'
 
     # model_file = out_dir +'/snap/060.pth'  #final
-    model_file = out_dir + '/snap/' + params.model_snap
+    model_file = out_dir + '/snap/' + params.post_submit_snap
 
     #logging, etc --------------------
-    os.makedirs(out_dir+'/submit/results',  exist_ok=True)
-    os.makedirs(out_dir+'/submit/test_mask',  exist_ok=True)
-    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/submit.code.zip')
+    os.makedirs(out_dir+'/TTA/results',  exist_ok=True)
+    os.makedirs(out_dir+'/TTA/test_mask',  exist_ok=True)
+    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), out_dir +'/backup/TTA.code.zip')
 
     log = Logger()
-    log.open(out_dir+'/log.submit.txt',mode='a')
+    log.open(out_dir+'/log.TTA.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
     log.write('* model_file=%s\n' % model_file)
@@ -495,7 +495,7 @@ def TTA(): #test time augmentation
     log.write('** dataset setting **\n')
     batch_size = 4
 
-    test_dataset = post_prosses_Dataset( 'test_100064',  'test',#100064  #3197
+    test_dataset = post_prosses_Dataset( 'bad_images_split',  'test',#100064  #3197
                                  #'valid_v0_768',  'train1024x1024',#100064  #3197
                                      transform= [
                                     ],mode='test')
@@ -535,7 +535,7 @@ def TTA(): #test time augmentation
 
     test_num = len(test_loader)
 
-    for it, (images0, indices) in enumerate(test_loader, 0):
+    for it, (images0, images1, images2, indices) in enumerate(test_loader, 0):
         images0  = Variable(images0,volatile=True).cuda()
         #labels  = Variable(labels).cuda().half()
         batch_size = len(indices)
@@ -544,9 +544,6 @@ def TTA(): #test time augmentation
 
         #forward
         t0 =  timer()
-
-        images1 = random_brightnessN(images0, limit=(-0.5,0.5), u=1)
-        images2 = random_contrastN(images0, limit=(-0.5,0.5), u=1)
 
         logits0 = net(images0)
         probs0  = F.sigmoid(logits0)
@@ -575,7 +572,7 @@ def TTA(): #test time augmentation
             name = names[indices[b]]
             prob = probs[b]
             
-            cv2.imwrite(out_dir+'/submit/test_mask/%s.png'%(name), prob)
+            cv2.imwrite(out_dir+'/TTA/test_mask/%s.png'%(name), prob)
 
         print('it: %d, num: %d'%(it,num), end=' ', flush=True)
         if num%1000 == 0:
@@ -595,7 +592,7 @@ if __name__ == '__main__':
     #itchat.auto_login()
     #----------------------------------
 
-    opts, args = getopt.getopt(sys.argv[1:], 'ts', ['s1', 's2'])
+    opts, args = getopt.getopt(sys.argv[1:], 'ts', ['s1', 's2', 'tta'])
 
     for opt, val in opts:
         print(opt)
@@ -610,6 +607,8 @@ if __name__ == '__main__':
         run_post_submit1()
     elif opt == '--s2':
         run_post_submit2()
+    elif opt == '--tta':
+        TTA()
     else:
         print('nothing,stop')
         

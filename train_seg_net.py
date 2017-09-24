@@ -717,7 +717,7 @@ def TTA(): #test time augmentation
     log.write('** dataset setting **\n')
     batch_size = 4
 
-    test_dataset = KgCarDataset( 'test_100064',  'test',#100064  #3197
+    test_dataset = KgCarDataset_TTA( 'bad_images_split',  'test',#100064  #3197
                                  #'valid_v0_768',  'train1024x1024',#100064  #3197
                                      transform= [
                                     ],mode='test')
@@ -746,7 +746,7 @@ def TTA(): #test time augmentation
 
     if is_merge_bn: merge_bn_in_net(net)
     ## start testing now #####
-    log.write('start prediction ...\n')
+    log.write('TTA ...\n')
     start = timer()
 
     net.eval()
@@ -757,8 +757,10 @@ def TTA(): #test time augmentation
 
     test_num = len(test_loader)
 
-    for it, (images0, indices) in enumerate(test_loader, 0):
+    for it, (images0, images1, images2, indices) in enumerate(test_loader, 0):
         images0  = Variable(images0,volatile=True).cuda()
+        images1  = Variable(images1,volatile=True).cuda()
+        images2  = Variable(images2,volatile=True).cuda()
         #labels  = Variable(labels).cuda().half()
         batch_size = len(indices)
 
@@ -766,9 +768,6 @@ def TTA(): #test time augmentation
 
         #forward
         t0 =  timer()
-
-        images1 = random_brightnessN(images0, limit=(-0.5,0.5), u=1)
-        images2 = random_contrastN(images0, limit=(-0.5,0.5), u=1)
 
         logits0 = net(images0)
         probs0  = F.sigmoid(logits0)
@@ -788,16 +787,22 @@ def TTA(): #test time augmentation
         #accs[start:start + batch_size]=a.data.cpu().numpy()
 
         ## full results ----------------
+        probs = np.zeros((batch_size,CARVANA_H,CARVANA_W),np.uint16)
         probs0 = (probs0.data.float().cpu().numpy()*255).astype(np.uint8)
         probs1 = (probs1.data.float().cpu().numpy()*255).astype(np.uint8)
         probs2 = (probs2.data.float().cpu().numpy()*255).astype(np.uint8)
 
-        probs = (probs0 + probs1 + probs2)/3
+        probs += probs0
+        probs += probs1
+        probs += probs2
+        probs = probs/3
+        probs.astype(np.uint8)
         for b in range(batch_size):
             name = names[indices[b]]
             prob = probs[b]
             
             cv2.imwrite(out_dir+'/TTA/test_mask/%s.png'%(name), prob)
+            cv2.imwrite(out_dir + '/TTA/test_mask/%s_origin.png' % (name), probs0[b])
 
         print('\r it: %d, num: %d'%(it,num), end=' ', flush=True)
         if num%8000 == 0:

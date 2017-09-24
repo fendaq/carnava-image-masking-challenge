@@ -122,7 +122,8 @@ def create_submission(csv_file, inference_folder, num_workers=2, image_queue=4, 
         sum_time += run_time
         mean_time = sum_time / (i + 1)
         eta_time = mean_time * (n_images - i - 1)
-        print("%d/%d: ETA: %s, AVE: %dms" % (i, n_images, get_time_left(eta_time), int(mean_time*1000)))
+        if i%10000 == 0:
+            print("%d/%d: ETA: %s, AVE: %dms" % (i, n_images, get_time_left(eta_time), int(mean_time*1000)))
         
     # Poison pill
     for _ in range(num_workers-1):

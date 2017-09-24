@@ -272,6 +272,65 @@ class KgCarDataset_MSC_infer(Dataset):
     def __len__(self):
         return len(self.names)
 
+class KgCarDataset_TTA(Dataset):
+
+    def __init__(self, split, folder, transform=[], mode='test'):
+        super(KgCarDataset_TTA, self).__init__()
+
+        # read names
+        split_file = CARVANA_DIR +'/split/'+ split
+        with open(split_file) as f:
+            names = f.readlines()
+        names = [name.strip()for name in names]
+        num   = len(names)
+
+        #meta data
+        df = pd.read_csv(CARVANA_DIR +'/metadata.csv')
+
+        #save
+        self.df        = df
+        self.split     = split
+        self.folder    = folder
+        self.transform = transform
+
+        self.mode      = mode
+        self.names     = names
+
+
+    #https://discuss.pytorch.org/t/trying-to-iterate-through-my-custom-dataset/1909
+    def get_image(self,index):
+        name   = self.names[index]
+        folder = self.folder
+        id     = name[:-3]
+        view   = int(name[-2:])-1
+
+        img_file = CARVANA_DIR + '/images/%s/%s.jpg'%(folder,name)
+        #img_file = CARVANA_DIR + '/images/%s.jpg'%(name)
+        #print(img_file)
+        img   = cv2.imread(img_file)
+        img   = cv2.resize(img, (CARVANA_W, CARVANA_H))
+        image = img.astype(np.float32)/255
+
+        return image
+
+    def get_test_item(self,index):
+        image = self.get_image(index)
+
+        image1 = random_brightness(image, limit=(-0.5,0.5), u=1)
+        image2 = random_contrast(image, limit=(-0.5,0.5), u=1)
+
+        image0 = image_to_tensor(image)
+        image1 = image_to_tensor(image1)
+        image2 = image_to_tensor(image2)
+        return image0, image1, image2, index
+
+
+    def __getitem__(self, index):
+
+        if self.mode=='test':  return self.get_test_item (index)
+
+    def __len__(self):
+        return len(self.names)
 
 class post_prosses_Dataset(Dataset):
 

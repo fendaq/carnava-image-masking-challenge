@@ -107,7 +107,8 @@ def ensamble_png():
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
 
     out_dir_ = []
-    for i in range(0,5):
+    #for i in range(0,5):
+    for i in range(0,7):
         out_dir_.append(params.out_dir + params.ensemble_dir + '_k%d'%(i+1))
 
     final_out_dir = params.out_dir + params.ensemble_dir
@@ -149,7 +150,8 @@ def ensamble_png():
             
             average += p[j]
         
-        average = average/5
+        #average = average/5
+        average = average/7
         
         cv2.imwrite(final_out_dir+'/submit/test_mask/%s.png'%(names[i]), average.astype(np.uint8))
 
