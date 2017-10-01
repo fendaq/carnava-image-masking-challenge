@@ -1,11 +1,11 @@
-#亮度矫正
+# 亮度矫正
 
 import os
 
 import numpy as np
 import cv2
 
-#https://github.com/Hsuxu/carvana-pytorch-uNet/blob/master/preprocessing.py
+# https://github.com/Hsuxu/carvana-pytorch-uNet/blob/master/preprocessing.py
 def contrast_adjust(image, alpha=1.3, beta=20):
     """
     adjust constrast through gamma correction
@@ -26,7 +26,7 @@ def contrast_adjust(image, alpha=1.3, beta=20):
         newimage[newimage > 1] = 1.
         return newimage
 
-#https://zhuanlan.zhihu.com/p/24425116
+# https://zhuanlan.zhihu.com/p/24425116
 def gamma_preprocess():
 
     img = cv2.imread('/Kaggle/test_pre_process/0d1a9caf4350_11.jpg')
