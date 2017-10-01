@@ -1,3 +1,4 @@
+# https://www.kaggle.com/adamhart/submission-file-generation-using-separate-threads?scriptVersionId=1501663
 # https://github.com/petrosgk/Kaggle-Carvana-Image-Masking-Challenge/blob/master/test_submit_multithreaded.py
 
 
