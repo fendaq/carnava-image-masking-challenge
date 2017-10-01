@@ -34,7 +34,7 @@ ensemble_dir = 'UNet1024_ASPP_08'
 
 #-----------------------------------------------
 # train_seg: run_valid() run_submit1() save_valid_mask()
-model_snap = None #'060.pth'
+model_snap = '044.pth' #'060.pth'
 
 #-------carvana_cars.py--------------
 post_prosses = False # 'True' return origin sizes, 'False' return input_size
@@ -53,7 +53,7 @@ post_using_ReduceLROnPlateau = True
 
 #real_post_batch_size = 15
 #step_post_batch_size = 3
-post_submit_snap = 'final.pth'
+post_submit_snap = '044.pth'
 
 post_model = UNet1024_post_train_02
 #------------------------------------------------
@@ -95,7 +95,7 @@ step_batch_size = 3
 #model_factory = UNet1024_ASPP_03;   save_path = 'UNet1024_ASPP_03'
 
 #model_factory = UNet1024_ASPP_07; save_path = 'UNet1024_ASPP_07'
-model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08'
+model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_brightness_k2'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k1'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k2'
 #model_factory = UNet1024_ASPP_08; save_path = 'UNet1024_ASPP_08_k3'

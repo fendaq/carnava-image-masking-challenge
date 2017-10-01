@@ -26,13 +26,18 @@ def vote_process(threadID, start_, end_, out_dir_=[], names=[], final_out_dir=''
 
 def run_vote_multi_process():
     out_dir_ = []
+    '''
     for i in range(5):
     #for i in range(0,7):
         out_dir_.append(params.out_dir + params.ensemble_dir + '_k%d'%(i+1))
 
     #out_dir_.append(params.out_dir + params.ensemble_dir + '_single')
-    
-    final_out_dir = params.out_dir + params.ensemble_dir + '_'
+    '''
+    out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_post_train_no_src')
+    out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_ens0')
+    out_dir_.append(params.out_dir + 'UNet1024_GCN_06_ens0')
+
+    final_out_dir = params.out_dir + 'ensemble_vote1'
 
     #logging, etc --------------------
     os.makedirs(final_out_dir+'/submit/results',  exist_ok=True)

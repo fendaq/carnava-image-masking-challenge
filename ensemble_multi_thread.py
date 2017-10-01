@@ -26,16 +26,29 @@ def ensamble_thread(threadID, start_, end_, out_dir_=[], names=[], final_out_dir
 
 def ensemble_png_multi_process():
     out_dir_ = []
+    
     for i in range(5):
     #for i in range(0,7):
-        out_dir_.append(params.out_dir + params.ensemble_dir + '_k%d'%(i+1))
+        out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_k%d'%(i+1))
 
-    out_dir_.append(params.out_dir + params.ensemble_dir + '_single')
+    out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_single')
 
     for i in range(5):
-        out_dir_.append(params.out_dir + params.ensemble_dir + '_k%d/post_train'%(i+1))
+        out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_k%d/post_train'%(i+1))
+
+    for i in range(7):
+        out_dir_.append(params.out_dir + 'UNet1024_GCN_06_k%d'%(i+1))
+
+    out_dir_.append(params.out_dir + 'UNet1024_GCN_06_single')
     
-    final_out_dir = params.out_dir + params.ensemble_dir + '_ens2'
+    '''
+    out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_post_train_no_src')
+    out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_ens0')
+    out_dir_.append(params.out_dir + 'UNet1024_GCN_06_ens0')
+    '''
+    #final_out_dir = params.out_dir + 'params.ensemble_dir + '_ens2'
+    final_out_dir = params.out_dir + 'ensemble_1_all'
+
 
     #logging, etc --------------------
     os.makedirs(final_out_dir+'/submit/results',  exist_ok=True)
@@ -60,10 +73,10 @@ def ensemble_png_multi_process():
 
     print('\n** thread start **')
 
-    thread1 = multiprocessing.Process(target = ensamble_thread, args=(1,     0, 25000, out_dir_, names, final_out_dir))
-    thread2 = multiprocessing.Process(target = ensamble_thread, args=(2, 25000, 50000, out_dir_, names, final_out_dir))
-    thread3 = multiprocessing.Process(target = ensamble_thread, args=(3, 50000, 75000, out_dir_, names, final_out_dir))
-    thread4 = multiprocessing.Process(target = ensamble_thread, args=(4, 75000,100064, out_dir_, names, final_out_dir))
+    thread1 = multiprocessing.Process(target = ensamble_thread, args=(1, 20000, 25000, out_dir_, names, final_out_dir))
+    thread2 = multiprocessing.Process(target = ensamble_thread, args=(2, 45000, 50000, out_dir_, names, final_out_dir))
+    thread3 = multiprocessing.Process(target = ensamble_thread, args=(3, 70000, 75000, out_dir_, names, final_out_dir))
+    thread4 = multiprocessing.Process(target = ensamble_thread, args=(4, 90000,100064, out_dir_, names, final_out_dir))
 
     thread1.start()
     thread2.start()
