@@ -107,11 +107,13 @@ def ensamble_png():
     #out_dir = '/root/share/project/kaggle-carvana-cars/results/single/UNet1024-peduo-label-01c'
 
     out_dir_ = []
-    #for i in range(0,5):
-    for i in range(0,7):
+    for i in range(0,5):
+    #for i in range(0,7):
         out_dir_.append(params.out_dir + params.ensemble_dir + '_k%d'%(i+1))
 
-    final_out_dir = params.out_dir + params.ensemble_dir
+    #out_dir_.append(params.out_dir + params.ensemble_dir + '_single')
+    
+    final_out_dir = params.out_dir + params.ensemble_dir #+ '_post_train_no_src'
 
     #logging, etc --------------------
     os.makedirs(final_out_dir+'/submit/results',  exist_ok=True)
@@ -122,6 +124,8 @@ def ensamble_png():
     log.open(final_out_dir+'/log.submit.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
+    for i in range(len(out_dir_)):
+        log.write('*' + out_dir_[i] + '\n')
 
 
     # read names
@@ -144,20 +148,21 @@ def ensamble_png():
     for i in range(len(names)): 
         p = []
         average = np.zeros((CARVANA_H,CARVANA_W),np.uint16)
-        for j in range(0,5):
-            p.append(cv2.imread(out_dir_[j]+'/out_mask/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
+        for j in range(len(out_dir_)):
+            p.append(cv2.imread(out_dir_[j]+'/post_train/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
             p[j] = p[j].astype(np.uint8)
             
             average += p[j]
         
         #average = average/5
-        average = average/7
+        average = average/len(out_dir_)
         
         cv2.imwrite(final_out_dir+'/submit/test_mask/%s.png'%(names[i]), average.astype(np.uint8))
 
-        if i%1000 == 0:
+        print('\r current_num: %d'%(i), end='', flush=True)
+        if i%5000 == 0:
             log.write(' [num: %d] \n'%(i))
-            log.write('\t time = %0.2f min \n'%((timer() - start)/60))
+            log.write('\t time = %0.2f min ,check dir_num = %d\n'%((timer() - start)/60, len(out_dir_)))
             start = timer()
     
     log.write(' save_masks = %f min\n'%((timer() - total_start) / 60))
@@ -226,8 +231,16 @@ def run_submit_ensemble():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    ensamble_png_custom()
-    #ensamble_png()
-    run_submit_ensemble()
+    opts, args = getopt.getopt(sys.argv[1:], '',['vot', 'cus', 'ens'])
+
+    for opt, val in opts: 
+        print(opt)
+    if opt == '--vot':
+        run_vote()
+    elif opt == '--cus':
+        ensamble_png_custom()
+    elif opt == '--ens':
+        ensamble_png()
+    #run_submit_ensemble()
 
     print('\nsucess!')

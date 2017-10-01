@@ -122,8 +122,8 @@ def create_submission(csv_file, inference_folder, num_workers=2, image_queue=4, 
         sum_time += run_time
         mean_time = sum_time / (i + 1)
         eta_time = mean_time * (n_images - i - 1)
-        if i%10000 == 0:
-            print("%d/%d: ETA: %s, AVE: %dms" % (i, n_images, get_time_left(eta_time), int(mean_time*1000)))
+        print("\r%d/%d: ETA: %s, AVE: %dms" % (i, n_images, get_time_left(eta_time), int(mean_time*1000)),\
+                  end='',flush=True)
         
     # Poison pill
     for _ in range(num_workers-1):
@@ -139,7 +139,7 @@ def create_submission(csv_file, inference_folder, num_workers=2, image_queue=4, 
 def run_submit2_multi_thread():
     start = timer()
 
-    final_out_dir = params.out_dir + params.ensemble_dir
+    final_out_dir = params.out_dir + params.ensemble_dir #+ '_post_train_no_src' # + '/post_train2_ensemble_source' 
 
     mask_path =  final_out_dir+'/submit/test_mask' #mask_path
     #create_submission("", mask_path, dry_run=True)
@@ -158,7 +158,7 @@ def run_submit2_multi_thread():
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
 
-    create_submission(final_out_dir + '/submit/temp_1.csv', mask_path, num_workers=4, image_queue=8)
+    create_submission(final_out_dir + '/submit/temp_1.csv', mask_path, num_workers=3, image_queue=6)
 
     print('\n--delete last 1 commont--')
     # delete last 1 commont

@@ -7,6 +7,7 @@ import params
 CARVANA_DIR = params.CARVANA_DIR
 
 out_dir = params.out_dir + params.save_path
+#out_dir = params.out_dir + params.ensemble_dir
     
 
 CARVANA_NUM_VIEWS = 16

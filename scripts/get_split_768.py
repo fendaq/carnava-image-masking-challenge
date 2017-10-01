@@ -98,12 +98,14 @@ def split_train_valid_list(K_version):
 
 def check_lists_overlap():
 
-    split_file = CARVANA_DIR +'/split/'+ 'train_v0_4320'
+    #split_file = CARVANA_DIR +'/split/'+ 'train_v0_4320'
+    split_file = CARVANA_DIR +'/split/test_pesudo/'+ 'valid_v0_768'
     with open(split_file) as f:
         names = f.readlines()
     names1 = [x.strip()for x in names]
 
-    split_file = CARVANA_DIR +'/split/'+ 'valid_v0_768'
+    #split_file = CARVANA_DIR +'/split/'+ 'valid_v0_768'
+    split_file = CARVANA_DIR +'/split/test_pesudo/'+ 'valid_v0_k3'
     with open(split_file) as f:
         names = f.readlines()
     names2 = [x.strip()for x in names]
