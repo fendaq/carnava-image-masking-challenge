@@ -17,32 +17,26 @@ from multiprocessing import Process, Queue
 def run_submit2_multi_thread():
     start = timer()
 
-    #final_out_dir = params.out_dir + params.ensemble_dir #+ '_post_train_no_src' # + '/post_train2_ensemble_source' 
-    final_out_dir = params.out_dir + 'UNet1024_ASPP_08_ens2'
-
-    mask_path =  final_out_dir+'/submit/test_mask' #mask_path
+    out_dir = params.out_dir + params.save_path
+    mask_path =  out_dir+'/submit/test_mask' #mask_path
     #create_submission("", mask_path, dry_run=True)
 
     #TRAIN_IMG = "/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/ensemble/UNet1024_ASPP_08/submit/test_mask"
     #test_dir = '/home/lhc/Projects/Kaggle-seg/My-Kaggle-Results/ensemble/test/'
     #list_of_images = get_all_images(TRAIN_IMG)
     #print(list_of_images[1][1:4])
-
-    #logging, etc --------------------
-    os.makedirs(final_out_dir+'/submit/results',  exist_ok=True)
-    backup_project_as_zip( os.path.dirname(os.path.realpath(__file__)), final_out_dir +'/backup/submit.code.zip')
     
     log = Logger()
-    log.open(final_out_dir+'/log.submit.txt',mode='a')
+    log.open(out_dir+'/log.submit.txt',mode='a')
     log.write('\n--- [START %s] %s\n\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '-' * 64))
     log.write('** some project setting **\n')
 
-    create_submission(final_out_dir + '/submit/temp_1.csv', mask_path, num_workers=3, image_queue=6)
+    create_submission(out_dir + '/submit/temp_1.csv', mask_path, num_workers=4, image_queue=8)
 
     print('\n--delete last 1 commont--')
     # delete last 1 commont
-    origin_f = open(final_out_dir +'/submit/temp_1.csv', 'r')
-    new_f = open(final_out_dir + '/submit/temp_2.csv', 'w')
+    origin_f = open(out_dir +'/submit/temp_1.csv', 'r')
+    new_f = open(out_dir + '/submit/temp_2.csv', 'w')
     reader = csv.reader(origin_f)
     writer = csv.writer(new_f)
 
@@ -65,14 +59,14 @@ def run_submit2_multi_thread():
 
     #with gzip.GzipFile(filename='test.csv', mode='wb', compresslevel=9, fileobj='test.gz') as f:
     #    f.write(new_f)
-    df = pd.read_csv(final_out_dir + '/submit/temp_2.csv')
+    df = pd.read_csv(out_dir + '/submit/temp_2.csv')
 
-    dir_name = final_out_dir.split('/')[-1]
-    gz_file  = final_out_dir + '/submit/results-%s.csv.gz'%dir_name
+    dir_name = out_dir.split('/')[-1]
+    gz_file  = out_dir + '/submit/results-%s.csv.gz'%dir_name
     df.to_csv(gz_file, index=False, compression='gzip')
     
-    os.remove(final_out_dir +'/submit/temp_1.csv')
-    os.remove(final_out_dir +'/submit/temp_2.csv')
+    os.remove(out_dir +'/submit/temp_1.csv')
+    os.remove(out_dir +'/submit/temp_2.csv')
 
     log.write('%0.2f min'%((timer()-start)/60))
 
