@@ -1,6 +1,17 @@
 # https://www.kaggle.com/adamhart/submission-file-generation-using-separate-threads?scriptVersionId=1501663
 # https://github.com/petrosgk/Kaggle-Carvana-Image-Masking-Challenge/blob/master/test_submit_multithreaded.py
 
+from common import *
+from dataset.carvana_cars import *
+
+from model.tool import *
+
+import csv
+import pandas as pd
+import numpy as np
+import os
+import time
+from multiprocessing import Process, Queue
 
 #------------------------------multi_thread--------------------
 # Time decorator

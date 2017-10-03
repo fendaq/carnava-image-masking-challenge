@@ -1,5 +1,6 @@
 import params
 
+'''
 from common import *
 from dataset.carvana_cars import *
 
@@ -11,8 +12,8 @@ import numpy as np
 import os
 import time
 from multiprocessing import Process, Queue
-
-
+'''
+from tools.muti_thread_utility import *
     
 def run_submit2_multi_thread():
     start = timer()
