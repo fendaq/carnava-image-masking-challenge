@@ -61,6 +61,8 @@ import lmdb # install lmdb by "pip install lmdb"
 import cv2
 import numpy as np
 
+import params
+
 
 def checkImageIsValid(imageBin):
     if imageBin is None:
