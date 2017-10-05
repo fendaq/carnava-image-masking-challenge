@@ -60,8 +60,12 @@ import os
 import lmdb # install lmdb by "pip install lmdb"
 import cv2
 import numpy as np
+#import base64
 
 import params
+from dataset.carvana_cars import *
+
+import time
 
 
 def checkImageIsValid(imageBin):
@@ -77,11 +81,11 @@ def checkImageIsValid(imageBin):
 
 def writeCache(env, cache):
     with env.begin(write=True) as txn:
-        for k, v in cache.iteritems():
-            txn.put(k, v)
+        for k, v in cache.items():
+            txn.put(k.encode(), v)
 
 
-def createDataset(outputPath, imagePathList, labelList, lexiconList=None, checkValid=True):
+def createDataset(outputPath, imagePath_, labelList, lexiconList=None, checkValid=True):
     """
     Create LMDB dataset for CRNN training.
 
@@ -92,48 +96,62 @@ def createDataset(outputPath, imagePathList, labelList, lexiconList=None, checkV
         lexiconList   : (optional) list of lexicon lists
         checkValid    : if true, check the validity of every image
     """
-    assert(len(imagePathList) == len(labelList))
-    nSamples = len(imagePathList)
+    print('out_path = ' + imagePath_)
+    nSamples = len(labelList)
+    #os.makedirs(outputPath, exist_ok=True)
     env = lmdb.open(outputPath, map_size=1099511627776)
     cache = {}
     cnt = 1
-    for i in xrange(nSamples):
-        imagePath = imagePathList[i]
+    for i in range(nSamples):
+        imagePath = labelList[i]
+        imagePath = imagePath_ + '/submit/test_mask/' + imagePath + '.png'
+
         label = labelList[i]
         if not os.path.exists(imagePath):
             print('%s does not exist' % imagePath)
             continue
-        with open(imagePath, 'r') as f:
+        with open(imagePath, 'rb') as f:
             imageBin = f.read()
+            #imageBin = base64.b64encode(f.read())
         if checkValid:
             if not checkImageIsValid(imageBin):
                 print('%s is not a valid image' % imagePath)
                 continue
 
-        imageKey = 'image-%09d' % cnt
-        labelKey = 'label-%09d' % cnt
-        cache[imageKey] = imageBin
-        cache[labelKey] = label
+        #imageKey = 'image-%09d' % cnt
+        #labelKey = 'label-%09d' % cnt
+        cache[label] = imageBin
+        #cache[labelKey] = label
         if lexiconList:
             lexiconKey = 'lexicon-%09d' % cnt
             cache[lexiconKey] = ' '.join(lexiconList[i])
         if cnt % 1000 == 0:
             writeCache(env, cache)
             cache = {}
-            print('Written %d / %d' % (cnt, nSamples))
+            print('\rWritten %d / %d' % (cnt, nSamples),end='',flush=True)
+        print('\rCurr ID %d / %d' % (cnt, nSamples),end='',flush=True)
         cnt += 1
     nSamples = cnt-1
-    cache['num-samples'] = str(nSamples)
+    #cache['num-samples'] = str(nSamples)
     writeCache(env, cache)
-    print('Created dataset with %d samples' % nSamples)
+    print('  Sucess Created dataset with %d samples' % nSamples)
 
 
 if __name__ == '__main__':
-    
-    outputPath = params.out_dir + params.save_path + '/submit/test_lmdb'
-    imagePathList = params.out_dir + params.save_path + '/submit/test_mask'
-    labelList = imagePathList
 
-    createDataset()
+    start = timer()
+
+    outputPath = params.out_dir + params.save_path + '/submit/test_lmdb'
+    #imagePathList = params.out_dir + params.save_path + '/submit/test_mask'
+
+    split_file = CARVANA_DIR +'/split/'+ 'test_100064'
+    with open(split_file) as f:
+        names = f.readlines()
+    names = [name.strip()for name in names]
+    num_test = len(names)
+
+    createDataset(outputPath, '', names)
+
+    print('total time: %.2f min' %((timer()-start)/60))
 
     pass

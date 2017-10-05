@@ -3,51 +3,68 @@ from dataset.carvana_cars import *
 from model.tool import *
 
 import multiprocessing
+import lmdb
+#import six
+#from PIL import Image
 
-def ensamble_thread(threadID, start_, end_, out_dir_=[], names=[], final_out_dir=''):
+def ensamble_thread(threadID, start_, end_, out_dir_=[], names=[], final_out_dir='', use_lmdb=True):
 
+    if use_lmdb:
+        env = []
+        for i in range(len(out_dir_)):
+            env.append(lmdb.open(out_dir_[i]+'/submit/test_lmdb'))
+    
     for i in range(start_, end_):
         p = []
         average = np.zeros((CARVANA_H,CARVANA_W),np.uint16)
         for j in range(len(out_dir_)):
-            p.append(cv2.imread(out_dir_[j]+'/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
-            #p.append(cv2.imread(out_dir_[j]+'/post_train/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
+            if use_lmdb:
+                with env[j].begin(write=False) as txn:
+                    imgbuf = txn.get(names[i].encode())
+                    #buf = six.BytesIO();buf.write(imgbuf);buf.seek(0)
+                    #p.append(np.array(Image.open(buf).convert('L')))
+                    buf2 = np.fromstring(imgbuf, np.uint8)
+                    p.append(cv2.imdecode(buf2, cv2.IMREAD_GRAYSCALE))
+            else:
+                p.append(cv2.imread(out_dir_[j]+'/submit/test_mask/%s.png'%(names[i]),cv2.IMREAD_GRAYSCALE))
+        
             p[j] = p[j].astype(np.uint8)
-
             average += p[j]
 
         #average = average/5
         average = average/len(out_dir_)
         cv2.imwrite(final_out_dir+'/submit/test_mask/%s.png'%(names[i]), average.astype(np.uint8))
 
-        #print('\r threadID = %d, start = %d, end = %d, curr = %d' %(threadID,start_,end_,i),end='\n',flush=True)
+        #debug
+        if 0:
+            print('\r threadID = %d, start = %d, end = %d, curr = %d, next_img_id = %s' %(threadID,start_,end_,i,names[i+1]),end='\n',flush=True)
+        
         if i%5000 == 0:
-            print('* threadID = %d, start = %d, end = %d, curr = %d\n' %(threadID,start_,end_,i))
+            print('* threadID = %d, start = %d, end = %d, curr = %d' %(threadID,start_,end_,i))
 
 def ensemble_png_multi_process():
     out_dir_ = []
-    
+    '''
     for i in range(5):
-    #for i in range(0,7):
         out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_k%d'%(i+1))
+    '''
+    # out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_single')
 
-    out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_single')
-
+    '''
     for i in range(5):
         out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_k%d/post_train'%(i+1))
-
+    '''
     for i in range(7):
         out_dir_.append(params.out_dir + 'UNet1024_GCN_06_k%d'%(i+1))
-
+    '''
     out_dir_.append(params.out_dir + 'UNet1024_GCN_06_single')
     
-    '''
     out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_post_train_no_src')
     out_dir_.append(params.out_dir + 'UNet1024_ASPP_08_ens0')
     out_dir_.append(params.out_dir + 'UNet1024_GCN_06_ens0')
     '''
     #final_out_dir = params.out_dir + 'params.ensemble_dir + '_ens2'
-    final_out_dir = params.out_dir + 'ensemble_1_all'
+    final_out_dir = params.out_dir + 'test'
 
 
     #logging, etc --------------------
@@ -73,11 +90,11 @@ def ensemble_png_multi_process():
 
     print('\n** thread start **')
 
-    thread1 = multiprocessing.Process(target = ensamble_thread, args=(1, 20000, 25000, out_dir_, names, final_out_dir))
-    thread2 = multiprocessing.Process(target = ensamble_thread, args=(2, 45000, 50000, out_dir_, names, final_out_dir))
-    thread3 = multiprocessing.Process(target = ensamble_thread, args=(3, 70000, 75000, out_dir_, names, final_out_dir))
-    thread4 = multiprocessing.Process(target = ensamble_thread, args=(4, 90000,100064, out_dir_, names, final_out_dir))
-
+    thread1 = multiprocessing.Process(target = ensamble_thread, args=(1,     0, 25000, out_dir_, names, final_out_dir))
+    thread2 = multiprocessing.Process(target = ensamble_thread, args=(2, 25000, 50000, out_dir_, names, final_out_dir))
+    thread3 = multiprocessing.Process(target = ensamble_thread, args=(3, 50000, 75000, out_dir_, names, final_out_dir))
+    thread4 = multiprocessing.Process(target = ensamble_thread, args=(4, 75000,100064, out_dir_, names, final_out_dir))
+    
     thread1.start()
     thread2.start()
     thread3.start()
