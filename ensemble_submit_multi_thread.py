@@ -19,7 +19,7 @@ def run_submit2_multi_thread():
     start = timer()
 
     #final_out_dir = params.out_dir + params.ensemble_dir #+ '_post_train_no_src' # + '/post_train2_ensemble_source' 
-    final_out_dir = params.out_dir + 'UNet1024_ASPP_08_ens2'
+    final_out_dir = params.out_dir + 'test'
 
     mask_path =  final_out_dir+'/submit/test_mask' #mask_path
     #create_submission("", mask_path, dry_run=True)
