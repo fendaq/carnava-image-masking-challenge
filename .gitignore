@@ -1,5 +1,6 @@
 # python_cache
 *.pyc
+__pycache__/*
 
 # VScode
 .vscode
